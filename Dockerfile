@@ -1,5 +1,4 @@
 FROM python:3.6
-MAINTAINER Joseph Walton <joseph.walton@ons.gov.uk>
 
 WORKDIR /rm_reporting
 COPY . /rm_reporting

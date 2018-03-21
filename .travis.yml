@@ -1,0 +1,22 @@
+language: python
+python: '3.6'
+
+cache:
+  - pip
+
+env:
+  - APP_SETTINGS=TestingConfig
+
+install:
+  - pip install pipenv
+  - pipenv install --dev --deploy
+
+script:
+  - make test
+
+after_success:
+  - pipenv run codecov
+
+branches:
+  only:
+    - master
