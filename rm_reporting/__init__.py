@@ -3,7 +3,7 @@ import os
 
 from flask import Flask
 from flask_cors import CORS
-from flask_restplus import Api
+from flask_restplus import Api, Namespace
 
 from rm_reporting.logger_config import logger_initial_config
 
@@ -22,6 +22,11 @@ CORS(app)
 
 api = Api(title='rm-reporting', default='info', default_label="")
 
+response_chasing_api = Namespace('response-chasing', path='/reporting-api/v1/response-chasing')
+
+api.add_namespace(response_chasing_api)
+
 from rm_reporting.resources.info import Info  # NOQA # pylint: disable=wrong-import-position
+from rm_reporting.resources.response_chasing import ResponseChasingDownload  # NOQA # pylint: disable=wrong-import-position
 
 api.init_app(app)
