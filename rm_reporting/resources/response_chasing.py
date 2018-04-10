@@ -42,15 +42,15 @@ class ResponseChasingDownload(Resource):
 
         engine = app.db.engine
 
-        collex_status = "select cg.status, b.business_ref, ba.attributes->> 'name', e.status, CONCAT(r.first_name ,' ',r.last_name), r.telephone, r.email_address, r.status " \
-        "from partysvc.business b " \
-        "inner join partysvc.business_respondent br on br.business_id = b.party_uuid " \
-        "inner join partysvc.business_attributes ba on ba.business_id = b.party_uuid "\
-        "full outer join casesvc.casegroup cg on cg.partyid = b.party_uuid " \
-        "full outer join partysvc.respondent r on r.id = br.respondent_id " \
-        "full outer join partysvc.enrolment e on e.business_id = b.party_uuid " \
-        f"where cg.collectionexerciseid = '{collection_exercise_id}'"
-
+        collex_status = "select cg.status, b.business_ref, ba.attributes->> 'name', e.status, " \
+                        "CONCAT(r.first_name ,' ',r.last_name), r.telephone, r.email_address, r.status " \
+                        "from partysvc.business b " \
+                        "inner join partysvc.business_respondent br on br.business_id = b.party_uuid " \
+                        "inner join partysvc.business_attributes ba on ba.business_id = b.party_uuid "\
+                        "full outer join casesvc.casegroup cg on cg.partyid = b.party_uuid " \
+                        "full outer join partysvc.respondent r on r.id = br.respondent_id " \
+                        "full outer join partysvc.enrolment e on e.business_id = b.party_uuid " \
+                        f"where cg.collectionexerciseid = '{collection_exercise_id}'"
 
         collex_details = engine.execute(text(collex_status))
 
