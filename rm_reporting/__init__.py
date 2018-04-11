@@ -27,17 +27,16 @@ def create_connection(db_connection_uri):
 
 
 app = Flask(__name__)
-logger_initial_config(service_name='rm-reporting', log_level=app.config['LOGGING_LEVEL'])
-logger = logging.getLogger(__name__)
 
 app_config = f"config.{os.environ.get('APP_SETTINGS', 'Config')}"
 app.config.from_object(app_config)
 
 app.url_map.strict_slashes = False
 
+logger_initial_config(service_name='rm-reporting', log_level=app.config['LOGGING_LEVEL'])
+logger = logging.getLogger(__name__)
+
 initialise_db(app)
-
-
 
 CORS(app)
 
