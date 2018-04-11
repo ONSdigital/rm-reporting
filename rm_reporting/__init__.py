@@ -11,21 +11,24 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from flask import _app_ctx_stack
 
 def initialise_db(app):
-    app.db = create_database(app.config['DATABASE_URI'])
+    app.db = create_connection(app.config['DATABASE_URI'])
 
 
-def create_database(db_connection):
+def create_connection(db_connection_uri):
 
     def current_request():
         return _app_ctx_stack.__ident_func__()
 
-    engine = create_engine(db_connection, convert_unicode=True, echo=True)
+    engine = create_engine(db_connection_uri, convert_unicode=True, echo=True)
     session = scoped_session(sessionmaker(), scopefunc=current_request)
     session.configure(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
     engine.session = session
     return engine
 
+
 app = Flask(__name__)
+logger_initial_config(service_name='rm-reporting', log_level=app.config['LOGGING_LEVEL'])
+logger = logging.getLogger(__name__)
 
 app_config = f"config.{os.environ.get('APP_SETTINGS', 'Config')}"
 app.config.from_object(app_config)
@@ -34,8 +37,6 @@ app.url_map.strict_slashes = False
 
 initialise_db(app)
 
-logger_initial_config(service_name='rm-reporting', log_level=app.config['LOGGING_LEVEL'])
-logger = logging.getLogger(__name__)
 
 
 CORS(app)
