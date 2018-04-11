@@ -17,6 +17,7 @@ from rm_reporting import app  # NOQA # pylint: disable=wrong-import-position
 
 logger = wrap_logger(logging.getLogger(__name__))
 
+
 def initialise_db(app):
     app.db = create_database(app.config['DATABASE_URI'])
 
