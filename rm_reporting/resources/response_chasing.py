@@ -51,7 +51,7 @@ class ResponseChasingDownload(Resource):
                         "ba.business_id = b.party_uuid " \
                         "order by cg.status, cg.sampleunitref) " \
                         "select bd.status, bd.sampleunitref, bd.name, e.status, r.status, " \
-                        "CONCAT(r.first_name, ' ', r.last_name), r.telephone, r.email_address, from business_data bd " \
+                        "CONCAT(r.first_name, ' ', r.last_name), r.telephone, r.email_address from business_data bd " \
                         "left join partysvc.enrolment e " \
                         f"on e.business_id = bd.business_uuid and e.survey_id = '{survey_id}' " \
                         "left join partysvc.respondent r on e.respondent_id = r.id " \
