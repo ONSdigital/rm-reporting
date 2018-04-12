@@ -42,6 +42,21 @@ class ResponseChasingDownload(Resource):
 
         engine = app.db.engine
 
+        report_query = \
+            "SELECT bd.status, bd.sampleunitref, bd.name, e.status, r.status, " \
+            "CONCAT(r.first_name, ' ', r.last_name), r.telephone, r.email_address " \
+            "FROM ( " \
+            "SELECT cg.sampleunitref, cg.status, ba.attributes->> 'name' as name, b.party_uuid as business_uuid " \
+            "from partysvc.business_attributes ba " \
+            "JOIN casesvc.casegroup cg ON ba.collection_exercise = cast (cg.collectionexerciseid as text) " \
+            "LEFT JOIN partysvc.business b ON b.business_ref = cg.sampleunitref " \
+            f"WHERE cg.collectionexerciseid = '{collection_exercise_id}' " \
+            "AND ba.business_id = b.party_uuid ) AS bd " \
+            "LEFT JOIN partysvc.enrolment e ON bd.business_uuid = e.business_id " \
+            f"AND e.survey_id = '{survey_id}' " \
+            "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id " \
+            "ORDER BY bd.sampleunitref "
+
         collex_status = "with business_data as " \
                         "(select cg.sampleunitref, cg.status, ba.attributes->> 'name' as name, " \
                         "b.party_uuid as business_uuid from partysvc.business_attributes ba, casesvc.casegroup cg " \
@@ -57,7 +72,7 @@ class ResponseChasingDownload(Resource):
                         "left join partysvc.respondent r on e.respondent_id = r.id " \
                         "order by bd.sampleunitref;"
 
-        collex_details = engine.execute(text(collex_status))
+        collex_details = engine.execute(text(report_query))
 
         for row in collex_details:
             business = []
