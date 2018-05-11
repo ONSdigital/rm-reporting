@@ -43,7 +43,7 @@ class ResponseDashboard(Resource):
 
         collex_details = engine.execute(text(collex_status)).first()
         collex_dict = {'sampleSize': collex_details[0],
-                       'accountsCreated': int(collex_details[1] or 0),
+                       'accountsEnrolled': int(collex_details[1] or 0),
                        'downloads': collex_details[2],
                        'uploads': collex_details[3]
                        }
