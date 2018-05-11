@@ -53,5 +53,3 @@ from rm_reporting.resources.info import Info  # NOQA # pylint: disable=wrong-imp
 from rm_reporting.resources.response_chasing import ResponseChasingDownload  # NOQA # pylint: disable=wrong-import-position
 from rm_reporting.resources.responses_dashboard import ResponseDashboard  # NOQA # pylint: disable=wrong-import-position
 api.init_app(app)
-
-
