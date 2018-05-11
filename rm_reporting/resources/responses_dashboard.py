@@ -54,11 +54,5 @@ class ResponseDashboard(Resource):
                     }
 
         response['report'] = collex_dict
-        # details = {}
-        # for row in collex_details:
-        #     test = dict(row)
-        #
-        # for key, value in test.items():
-        #     details[key] = int(value)
 
         return Response(json.dumps(response), content_type='application/json')
