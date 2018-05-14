@@ -51,15 +51,17 @@ class ResponseDashboard(Resource):
 
         collex_details = engine.execute(text(collex_status), collection_exercise_id=collection_exercise_id).first()
 
-        collex_dict = {'sampleSize': collex_details[0],
-                       'accountsEnrolled': int(collex_details[1] or 0),
-                       'downloads': collex_details[2],
-                       'uploads': collex_details[3]
-                       }
+        collex_dict = {
+            'sampleSize': collex_details['Sample Size'],
+            'accountsEnrolled': int(collex_details['Total Enrolled'] or 0),
+            'downloads': collex_details['Total Downloaded'],
+            'uploads': collex_details['Total Uploaded']
+        }
 
-        response = {'metadata': {'timeUpdated': datetime.now().timestamp(),
-                                 'collectionExerciseId': collection_exercise_id},
-                    'report': collex_dict
-                    }
+        response = {
+            'metadata': {'timeUpdated': datetime.now().timestamp(),
+                         'collectionExerciseId': collection_exercise_id},
+            'report': collex_dict
+        }
 
         return Response(json.dumps(response), content_type='application/json')
