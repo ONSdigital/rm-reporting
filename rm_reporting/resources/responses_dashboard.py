@@ -2,7 +2,7 @@ from datetime import datetime
 import logging
 
 from flask import json, Response
-from flask_restplus import Resource
+from flask_restplus import Resource, abort
 from sqlalchemy import text
 from sqlalchemy.exc import DataError
 from structlog import wrap_logger
@@ -19,53 +19,50 @@ class ResponseDashboard(Resource):
 
         engine = app.db.engine
 
-        report_query = text(
-            'SELECT '
-            'COUNT(DISTINCT(sample_unit_ref)) "Sample Size", '
-            'SUM(enrolled) "Total Enrolled", '
-            'SUM(downloaded) "Total Downloaded", '
-            'SUM(uploaded) "Total Uploaded" '
-            'FROM '
-            '(SELECT '
-            'events.sampleunitref sample_unit_ref, '
-            'events.sampleunittype, '
-            'events.caseref case_ref, '
-            'events.respondent_enrolled enrolled, '
-            'events.collection_instrument_downloaded_ind downloaded, '
-            'events.successful_response_upload_ind uploaded '
-            'FROM '
-            '(SELECT cg.sampleunitref, '
-            'c.sampleunittype, c.caseref, '
-            'SUM(CASE WHEN ce.categoryFK = \'RESPONDENT_ENROLED\' '
-            'THEN 1 ELSE  0 END) respondent_enrolled, '
-            'MAX(CASE WHEN ce.categoryFK = \'COLLECTION_INSTRUMENT_DOWNLOADED\' '
-            'THEN 1 ELSE  0 END) collection_instrument_downloaded_ind, '
-            'MAX(CASE WHEN ce.categoryFK = \'SUCCESSFUL_RESPONSE_UPLOAD\' '
-            'THEN 1 ELSE  0 END) successful_response_upload_ind '
-            'FROM casesvc.caseevent ce '
-            'RIGHT OUTER JOIN casesvc.case c ON c.casePK = ce.caseFK '
-            'INNER JOIN casesvc.casegroup cg ON c.casegroupFK = cg.casegroupPK '
-            'GROUP BY cg.sampleunitref, c.sampleunittype, c.casePK) events) as data_records '
-            'WHERE case_ref IN '
-            '(SELECT t.caseref FROM casesvc."case" t '
-            'WHERE t.casegroupid IN '
-            '(SELECT t.id "Group ID" FROM casesvc.casegroup t '
-            'WHERE t.collectionexerciseid = :collection_exercise_id))')
+        report_query = text('SELECT '
+                            'COUNT(DISTINCT(sample_unit_ref)) "Sample Size", '
+                            'SUM(enrolled) "Total Enrolled", '
+                            'SUM(downloaded) "Total Downloaded", '
+                            'SUM(uploaded) "Total Uploaded" '
+                            'FROM '
+                            '(SELECT '
+                            'events.sampleunitref sample_unit_ref, '
+                            'events.sampleunittype, '
+                            'events.caseref case_ref, '
+                            'events.respondent_enrolled enrolled, '
+                            'events.collection_instrument_downloaded_ind downloaded, '
+                            'events.successful_response_upload_ind uploaded '
+                            'FROM '
+                            '(SELECT '
+                            'cg.sampleunitref, '
+                            'c.sampleunittype, '
+                            'c.caseref, '
+                            'SUM(CASE WHEN ce.categoryFK = \'RESPONDENT_ENROLED\' '
+                            'THEN 1 ELSE  0 END) respondent_enrolled, '
+                            'MAX(CASE WHEN ce.categoryFK = \'COLLECTION_INSTRUMENT_DOWNLOADED\' '
+                            'THEN 1 ELSE  0 END) collection_instrument_downloaded_ind, '
+                            'MAX(CASE WHEN ce.categoryFK = \'SUCCESSFUL_RESPONSE_UPLOAD\' '
+                            'THEN 1 ELSE  0 END) successful_response_upload_ind '
+                            'FROM casesvc.caseevent ce '
+                            'RIGHT OUTER JOIN casesvc.case c ON c.casePK = ce.caseFK '
+                            'INNER JOIN casesvc.casegroup cg ON c.casegroupFK = cg.casegroupPK '
+                            'GROUP BY cg.sampleunitref, c.sampleunittype, c.casePK) events) as data_records '
+                            'WHERE case_ref IN '
+                            '(SELECT t.caseref FROM casesvc."case" t '
+                            'WHERE t.casegroupid IN '
+                            '(SELECT t.id "Group ID" FROM casesvc.casegroup t '
+                            'WHERE t.collectionexerciseid = :collection_exercise_id))')
 
         try:
-            report_details = engine.execute(
-                report_query,
-                collection_exercise_id=collection_exercise_id).first()
+            report_details = engine.execute(report_query, collection_exercise_id=collection_exercise_id).first()
+            nulls_returned = any(column is None for column in report_details)
         except DataError as err:
             logger.debug("Invalid parameter", invalid_param=err.params)
-            return Response(status=400)
+            abort(400)
 
-        nulls_returned = any(column is None for column in report_details)
         if nulls_returned:
-            logger.debug(
-                "Invalid collection exercise ID",
-                collection_exercise_id=collection_exercise_id)
-            return Response(status=400)
+            logger.debug("Invalid collection exercise ID", collection_exercise_id=collection_exercise_id)
+            abort(400)
 
         response_content = {
             'metadata': {
@@ -80,5 +77,4 @@ class ResponseDashboard(Resource):
             }
         }
 
-        return Response(
-            json.dumps(response_content), content_type='application/json')
+        return Response(json.dumps(response_content), content_type='application/json')
