@@ -4,10 +4,10 @@ import logging
 from flask import json, Response
 from flask_restplus import Resource, abort
 from sqlalchemy import text
-from sqlalchemy.exc import DataError
 from structlog import wrap_logger
 
 from rm_reporting import app, response_dashboard_api
+from rm_reporting.common.validators import is_valid_uuid
 
 logger = wrap_logger(logging.getLogger(__name__))
 
@@ -21,7 +21,7 @@ class ResponseDashboard(Resource):
 
         report_query = text('SELECT '
                             'COUNT(DISTINCT(sample_unit_ref)) "Sample Size", '
-                            'SUM(enrolled) "Total Enrolled", '
+                            'CAST(SUM(enrolled) as INTEGER) "Total Enrolled", '
                             'SUM(downloaded) "Total Downloaded", '
                             'SUM(uploaded) "Total Uploaded" '
                             'FROM '
@@ -53,16 +53,17 @@ class ResponseDashboard(Resource):
                             '(SELECT t.id "Group ID" FROM casesvc.casegroup t '
                             'WHERE t.collectionexerciseid = :collection_exercise_id))')
 
-        try:
-            report_details = engine.execute(report_query, collection_exercise_id=collection_exercise_id).first()
-            nulls_returned = any(column is None for column in report_details)
-        except DataError as err:
-            logger.debug("Invalid parameter", invalid_param=err.params)
-            abort(400)
+        valid_uuid = is_valid_uuid(collection_exercise_id)
+        if not valid_uuid:
+            logger.debug("Malformed collection exercise ID", invalid_id=collection_exercise_id)
+            abort(400, "Malformed collection exercise ID")
+
+        report_details = engine.execute(report_query, collection_exercise_id=collection_exercise_id)
+        nulls_returned = any(column is None for column in report_details)
 
         if nulls_returned:
             logger.debug("Invalid collection exercise ID", collection_exercise_id=collection_exercise_id)
-            abort(400)
+            abort(400, "Invalid collection exercise ID")
 
         response_content = {
             'metadata': {
@@ -71,7 +72,7 @@ class ResponseDashboard(Resource):
             },
             'report': {
                 'sampleSize': report_details['Sample Size'],
-                'accountsEnrolled': int(report_details['Total Enrolled']),
+                'accountsEnrolled': report_details['Total Enrolled'],
                 'downloads': report_details['Total Downloaded'],
                 'uploads': report_details['Total Uploaded']
             }
