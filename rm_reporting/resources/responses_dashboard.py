@@ -58,10 +58,9 @@ class ResponseDashboard(Resource):
             logger.debug("Malformed collection exercise ID", invalid_id=collection_exercise_id)
             abort(400, "Malformed collection exercise ID")
 
-        report_details = engine.execute(report_query, collection_exercise_id=collection_exercise_id)
-        nulls_returned = any(column is None for column in report_details)
+        report_details = engine.execute(report_query, collection_exercise_id=collection_exercise_id).first()
 
-        if nulls_returned:
+        if any(column is None for column in report_details):
             logger.debug("Invalid collection exercise ID", collection_exercise_id=collection_exercise_id)
             abort(400, "Invalid collection exercise ID")
 
