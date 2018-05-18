@@ -55,12 +55,11 @@ class ResponseDashboard(Resource):
 
         try:
             report_details = engine.execute(report_query, collection_exercise_id=collection_exercise_id).first()
-            nulls_returned = any(column is None for column in report_details)
         except DataError as err:
             logger.debug("Invalid parameter", invalid_param=err.params)
             abort(400)
 
-        if nulls_returned:
+        if any(column is None for column in report_details):
             logger.debug("Invalid collection exercise ID", collection_exercise_id=collection_exercise_id)
             abort(400)
 
