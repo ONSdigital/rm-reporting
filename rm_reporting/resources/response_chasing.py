@@ -3,6 +3,7 @@ import io
 
 from flask import make_response
 from flask_restplus import Resource
+from sqlalchemy.exc import SQLAlchemyError
 from openpyxl import Workbook
 from structlog import wrap_logger
 
@@ -72,7 +73,10 @@ class ResponseChasingDownload(Resource):
                         "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id " \
                         "ORDER BY bd.sampleunitref;"
 
-        collex_details = engine.execute(text(collex_status))
+        try:
+          collex_details = engine.execute(text(collex_status))
+        except SQLAlchemyError:
+            logger.exception("SQL Alchemy query failed")
 
         for row in collex_details:
             business = []
