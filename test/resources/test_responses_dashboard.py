@@ -1,11 +1,10 @@
 import json
-import unittest
-from unittest import mock
+from unittest import TestCase, mock
 
 from rm_reporting import app
 
 
-class TestResponseDashboard(unittest.TestCase):
+class TestResponseDashboard(TestCase):
 
     def setUp(self):
 

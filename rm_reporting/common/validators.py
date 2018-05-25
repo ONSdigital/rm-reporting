@@ -3,7 +3,7 @@ import uuid
 
 def is_valid_uuid(uuid_string):
 
-    if len(uuid_string) > 36:
+    if len(uuid_string) > 35:
         return False
 
     try:
