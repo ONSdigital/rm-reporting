@@ -1,15 +1,10 @@
 import uuid
 
 
-def is_valid_uuid(uuid_string):
-
-    if len(uuid_string) > 35:
-        return False
+def parse_uuid(uuid_string):
 
     try:
         # Check if data is in valid UUID format
-        str(uuid.UUID(uuid_string))
+        return str(uuid.UUID(uuid_string))
     except ValueError:
         return False
-    else:
-        return True

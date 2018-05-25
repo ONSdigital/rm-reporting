@@ -1,13 +1,14 @@
 from unittest import TestCase
 
-from rm_reporting.common.validators import is_valid_uuid
+from rm_reporting.common.validators import parse_uuid
 
 
 class TestValidators(TestCase):
 
     def test_valid_uuid(self):
-        self.assertTrue(is_valid_uuid('00000000-0000-00000000-000000000000'))
+        collex_id = parse_uuid('00000000-0000-00000000-000000000000')
+        self.assertTrue(collex_id)
 
     def test_malformed_uuid(self):
-        self.assertFalse(is_valid_uuid('00000000-0000-00000000-000000000000-'))
-        self.assertFalse(is_valid_uuid('this-is-not-a-valid-uuid'))
+        collex_id = parse_uuid('this-is-not-a-valid-uuid')
+        self.assertFalse(collex_id)

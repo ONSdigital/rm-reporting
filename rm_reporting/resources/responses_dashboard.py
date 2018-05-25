@@ -7,7 +7,7 @@ from sqlalchemy import text
 from structlog import wrap_logger
 
 from rm_reporting import app, response_dashboard_api
-from rm_reporting.common.validators import is_valid_uuid
+from rm_reporting.common.validators import parse_uuid
 
 logger = wrap_logger(logging.getLogger(__name__))
 
@@ -53,20 +53,21 @@ class ResponseDashboard(Resource):
                             '(SELECT cg.id "Group ID" FROM casesvc.casegroup cg '
                             'WHERE cg.collectionexerciseid = :collection_exercise_id))')
 
-        if not is_valid_uuid(collection_exercise_id):
+        collex_id = parse_uuid(collection_exercise_id)
+        if not collex_id:
             logger.debug("Malformed collection exercise ID", invalid_id=collection_exercise_id)
             abort(400, "Malformed collection exercise ID")
 
-        report_details = engine.execute(report_query, collection_exercise_id=collection_exercise_id).first()
+        report_details = engine.execute(report_query, collection_exercise_id=collex_id).first()
 
         if any(column is None for column in report_details):
-            logger.debug("Invalid collection exercise ID", collection_exercise_id=collection_exercise_id)
+            logger.debug("Invalid collection exercise ID", collection_exercise_id=collex_id)
             abort(400, "Invalid collection exercise ID")
 
         response_content = {
             'metadata': {
                 'timeUpdated': datetime.now().timestamp(),
-                'collectionExerciseId': collection_exercise_id
+                'collectionExerciseId': collex_id
             },
             'report': {
                 'sampleSize': report_details['Sample Size'],
