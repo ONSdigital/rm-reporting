@@ -53,8 +53,7 @@ class ResponseDashboard(Resource):
                             '(SELECT t.id "Group ID" FROM casesvc.casegroup t '
                             'WHERE t.collectionexerciseid = :collection_exercise_id))')
 
-        valid_uuid = is_valid_uuid(collection_exercise_id)
-        if not valid_uuid:
+        if not is_valid_uuid(collection_exercise_id):
             logger.debug("Malformed collection exercise ID", invalid_id=collection_exercise_id)
             abort(400, "Malformed collection exercise ID")
 
