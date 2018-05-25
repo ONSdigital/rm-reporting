@@ -48,10 +48,10 @@ class ResponseDashboard(Resource):
                             'INNER JOIN casesvc.casegroup cg ON c.casegroupFK = cg.casegroupPK '
                             'GROUP BY cg.sampleunitref, c.sampleunittype, c.casePK) events) as data_records '
                             'WHERE case_ref IN '
-                            '(SELECT t.caseref FROM casesvc."case" t '
-                            'WHERE t.casegroupid IN '
-                            '(SELECT t.id "Group ID" FROM casesvc.casegroup t '
-                            'WHERE t.collectionexerciseid = :collection_exercise_id))')
+                            '(SELECT c.caseref FROM casesvc.case c '
+                            'WHERE c.casegroupid IN '
+                            '(SELECT cg.id "Group ID" FROM casesvc.casegroup cg '
+                            'WHERE cg.collectionexerciseid = :collection_exercise_id))')
 
         if not is_valid_uuid(collection_exercise_id):
             logger.debug("Malformed collection exercise ID", invalid_id=collection_exercise_id)
