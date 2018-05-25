@@ -33,12 +33,14 @@ class TestResponseDashboard(unittest.TestCase):
     def test_dashboard_report_invalid_id(self, mock_engine):
         mock_engine.execute.return_value.first.return_value = (0, 0, 0, None)
         response = self.test_client.get('/reporting-api/v1/response-dashboard/00000000-0000-0000-0000-000000000000')
+        error_response = json.loads(response.data)['message']
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, b'{"message": "Invalid collection exercise ID"}\n')
+        self.assertEqual(error_response, 'Invalid collection exercise ID')
 
     def test_dashboard_report_malformed_id(self):
         response = self.test_client.get('/reporting-api/v1/response-dashboard/not-a-valid-uuid-format')
+        error_response = json.loads(response.data)['message']
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data, b'{"message": "Malformed collection exercise ID"}\n')
+        self.assertEqual(error_response, 'Malformed collection exercise ID')
