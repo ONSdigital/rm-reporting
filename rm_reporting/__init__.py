@@ -10,6 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from flask import _app_ctx_stack
 
+
 def initialise_db(app):
     app.db = create_connection(app.config['DATABASE_URI'])
 
@@ -50,5 +51,4 @@ from rm_reporting.resources.info import Info  # NOQA # pylint: disable=wrong-imp
 from rm_reporting.resources.response_chasing import ResponseChasingDownload  # NOQA # pylint: disable=wrong-import-position
 
 api.init_app(app)
-
 
