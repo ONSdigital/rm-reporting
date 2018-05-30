@@ -77,7 +77,7 @@ class ResponseChasingDownload(Resource):
           collex_details = engine.execute(text(collex_status))
         except SQLAlchemyError:
             logger.exception("SQL Alchemy query failed")
-            raise SQLAlchemyError
+            raise
 
         for row in collex_details:
             business = []
