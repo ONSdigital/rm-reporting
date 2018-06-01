@@ -12,7 +12,7 @@ from rm_reporting.common.validators import parse_uuid
 logger = wrap_logger(logging.getLogger(__name__))
 
 
-@response_dashboard_api.route('/<collection_exercise_id>')
+@response_dashboard_api.route('collection_exercise/<collection_exercise_id>')
 class ResponseDashboard(Resource):
     @staticmethod
     def get(collection_exercise_id):
