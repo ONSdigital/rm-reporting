@@ -63,8 +63,8 @@ class TestResponseDashboard(TestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual(38, response_dict['report']['sampleSize'])
-        self.assertEqual(22, response_dict['report']['accountEnrolled'])
-        self.assertEqual(30, response_dict['report']['accountCreated'])
+        self.assertEqual(22, response_dict['report']['accountsEnrolled'])
+        self.assertEqual(30, response_dict['report']['accountsCreated'])
         self.assertEqual(20, response_dict['report']['completed'])
         self.assertEqual(10, response_dict['report']['inProgress'])
         self.assertEqual(8, response_dict['report']['notStarted'])
