@@ -107,8 +107,8 @@ def get_eq_report(collection_exercise_id, engine):
 
     return {
         'inProgress': report_details['Total Launched'] - report_details['Total Completed'],
-        'accountCreated': report_details['Total Accounts Created'],
-        'accountEnrolled': report_details['Total Enrolled'],
+        'accountsCreated': report_details['Total Accounts Created'],
+        'accountsEnrolled': report_details['Total Enrolled'],
         'notStarted': report_details['Sample Size'] - report_details['Total Launched'],
         'completed': report_details['Total Completed'],
         'sampleSize': report_details['Sample Size']
