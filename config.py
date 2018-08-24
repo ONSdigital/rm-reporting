@@ -19,8 +19,7 @@ class Config(object):
         DATABASE_URI = cf.db.credentials['uri']
     else:
         DATABASE_URI = os.getenv('DATABASE_URI',
-                                 "postgres://uojlz5705c2z6js3:8zhscuv4icdgs3cuurs5e0zo1@localhost:5430/"
-                                 "db4mardgluago2k7w")
+                                 'postgres://postgres:postgres@localhost:6432/postgres')
 
 
 class DevelopmentConfig(Config):
