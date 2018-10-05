@@ -99,3 +99,74 @@ class ResponseChasingDownload(Resource):
         response.headers["Content-Disposition"] = f"attachment; filename=response_chasing_{collection_exercise_id}.xlsx"
         response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         return response
+
+
+@response_chasing_api.route('/download-social-mi')
+class SocialMIDownload(Resource):
+
+    @staticmethod
+    def get():
+        output = io.BytesIO()
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Social MI Report"
+
+        # Set headers
+        headers = {
+            "A1": "Sample Reference",
+            "B1": "Status",
+            "C1": "Status Event",
+            "D1": "Address Line 1",
+            "E1": "Address Line 2",
+            "F1": "Locality",
+            "G1": "Town Name",
+            "H1": "Postcode",
+            "I1": "Country"
+        }
+
+        for cell, header in headers.items():
+            ws[cell] = header
+            ws.column_dimensions[cell[0]].width = len(header)
+
+        engine = app.db.engine
+
+        case_status = "SELECT DISTINCT ON (cg.sampleunitref) cg.sampleunitref, " \
+                      "cg.status, ce.description, " \
+                      "attributes->> 'ADDRESS_LINE1' AS address_line_1, " \
+                      "attributes->> 'ADDRESS_LINE2' AS address_line_2, " \
+                      "attributes->> 'LOCALITY' AS locality, " \
+                      "attributes->> 'TOWN_NAME' AS town_name, " \
+                      "attributes->> 'POSTCODE' AS postcode, " \
+                      "attributes->> 'COUNTRY' AS country " \
+                      "FROM casesvc.case c JOIN casesvc.casegroup cg ON c.casegroupfk = cg.casegrouppk " \
+                      "JOIN casesvc.caseevent ce ON ce.casefk = c.casepk " \
+                      "JOIN sample.sampleattributes sa ON " \
+                      "CONCAT(attributes->> 'TLA','', attributes->> 'REFERENCE') = cg.sampleunitref " \
+                      "WHERE c.sampleunittype = 'H' ORDER BY cg.sampleunitref, ce.createddatetime DESC"
+
+        try:
+            case_details = engine.execute(text(case_status))
+        except SQLAlchemyError:
+            logger.exception("SQL Alchemy query failed")
+            raise
+
+        for row in case_details:
+            social = []
+            social.append(row[0])
+            social.append(row[1])
+            social.append(row[2])
+            social.append(row[3])
+            social.append(row[4])
+            social.append(row[5])
+            social.append(row[6])
+            social.append(row[7])
+            social.append(row[8])
+            ws.append(social)
+
+        wb.save(output)
+        wb.close()
+
+        response = make_response(output.getvalue(), 200)
+        response.headers["Content-Disposition"] = f"attachment; filename=social_mi_report.xlsx"
+        response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        return response
