@@ -101,11 +101,11 @@ class ResponseChasingDownload(Resource):
         return response
 
 
-@response_chasing_api.route('/download-social-mi')
+@response_chasing_api.route('/download-social-mi/<collection_exercise_id>')
 class SocialMIDownload(Resource):
 
     @staticmethod
-    def get():
+    def get(collection_exercise_id):
         output = io.BytesIO()
         wb = Workbook()
         ws = wb.active
@@ -142,7 +142,8 @@ class SocialMIDownload(Resource):
                       "JOIN casesvc.caseevent ce ON ce.casefk = c.casepk " \
                       "JOIN sample.sampleattributes sa ON " \
                       "CONCAT(attributes->> 'TLA','', attributes->> 'REFERENCE') = cg.sampleunitref " \
-                      "WHERE c.sampleunittype = 'H' ORDER BY cg.sampleunitref, ce.createddatetime DESC"
+                      f"WHERE c.sampleunittype = 'H' AND cg.collectionexerciseid = '{collection_exercise_id}' " \
+                      "ORDER BY cg.sampleunitref, ce.createddatetime DESC"
 
         try:
             case_details = engine.execute(text(case_status))
@@ -167,6 +168,6 @@ class SocialMIDownload(Resource):
         wb.close()
 
         response = make_response(output.getvalue(), 200)
-        response.headers["Content-Disposition"] = f"attachment; filename=social_mi_report.csv"
+        response.headers["Content-Disposition"] = f"attachment; filename=social_mi_report_{collection_exercise_id}.csv"
         response.headers["Content-type"] = "text/csv"
         return response
