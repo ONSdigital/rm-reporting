@@ -167,6 +167,6 @@ class SocialMIDownload(Resource):
         wb.close()
 
         response = make_response(output.getvalue(), 200)
-        response.headers["Content-Disposition"] = f"attachment; filename=social_mi_report.xlsx"
+        response.headers["Content-Disposition"] = f"attachment; filename=social_mi_report.csv"
         response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         return response
