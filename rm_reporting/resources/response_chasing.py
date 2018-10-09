@@ -168,5 +168,5 @@ class SocialMIDownload(Resource):
 
         response = make_response(output.getvalue(), 200)
         response.headers["Content-Disposition"] = f"attachment; filename=social_mi_report.csv"
-        response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        response.headers["Content-type"] = "text/csv"
         return response
