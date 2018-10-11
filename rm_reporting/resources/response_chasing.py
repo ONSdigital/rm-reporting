@@ -130,8 +130,8 @@ class SocialMIDownload(Resource):
 
         engine = app.db.engine
 
-        case_status = "SELECT DISTINCT ON (cg.sampleunitref) cg.sampleunitref, " \
-                      "cg.status, ce.description, " \
+        case_status = "SELECT DISTINCT ON (cg.sampleunitref) cg.sampleunitref, cg.status, " \
+                      "CASE WHEN ce.description !~ '[0-9]' THEN '' ELSE ce.description END, " \
                       "attributes->> 'ADDRESS_LINE1' AS address_line_1, " \
                       "attributes->> 'ADDRESS_LINE2' AS address_line_2, " \
                       "attributes->> 'LOCALITY' AS locality, " \
@@ -140,7 +140,7 @@ class SocialMIDownload(Resource):
                       "attributes->> 'COUNTRY' AS country " \
                       "FROM casesvc.case c JOIN casesvc.casegroup cg ON c.casegroupfk = cg.casegrouppk " \
                       "JOIN casesvc.caseevent ce ON ce.casefk = c.casepk " \
-                      "JOIN sample.sampleattributes sa ON " \
+                      "JOIN samplesvc.sampleattributes sa ON " \
                       "CONCAT(attributes->> 'TLA','', attributes->> 'REFERENCE') = cg.sampleunitref " \
                       f"WHERE c.sampleunittype = 'H' AND cg.collectionexerciseid = '{collection_exercise_id}' " \
                       "ORDER BY cg.sampleunitref, ce.createddatetime DESC"
