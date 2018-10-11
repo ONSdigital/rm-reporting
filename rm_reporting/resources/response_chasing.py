@@ -1,5 +1,6 @@
 import logging
 import io
+import csv
 
 from flask import make_response
 from flask_restplus import Resource
@@ -106,66 +107,49 @@ class SocialMIDownload(Resource):
 
     @staticmethod
     def get(collection_exercise_id):
-        output = io.BytesIO()
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Social MI Report"
+        output = io.StringIO()
 
         # Set headers
-        headers = {
-            "A1": "Sample Reference",
-            "B1": "Status",
-            "C1": "Status Event",
-            "D1": "Address Line 1",
-            "E1": "Address Line 2",
-            "F1": "Locality",
-            "G1": "Town Name",
-            "H1": "Postcode",
-            "I1": "Country"
-        }
-
-        for cell, header in headers.items():
-            ws[cell] = header
-            ws.column_dimensions[cell[0]].width = len(header)
+        headers = [
+            "Sample Reference",
+            "Status",
+            "Status Event",
+            "Address Line 1",
+            "Address Line 2",
+            "Locality",
+            "Town Name",
+            "Postcode",
+            "Country"
+        ]
 
         engine = app.db.engine
 
-        case_status = "SELECT DISTINCT ON (cg.sampleunitref) cg.sampleunitref, cg.status, " \
-                      "CASE WHEN ce.description !~ '[0-9]' THEN '' ELSE ce.description END, " \
-                      "attributes->> 'ADDRESS_LINE1' AS address_line_1, " \
-                      "attributes->> 'ADDRESS_LINE2' AS address_line_2, " \
-                      "attributes->> 'LOCALITY' AS locality, " \
-                      "attributes->> 'TOWN_NAME' AS town_name, " \
-                      "attributes->> 'POSTCODE' AS postcode, " \
-                      "attributes->> 'COUNTRY' AS country " \
-                      "FROM casesvc.case c JOIN casesvc.casegroup cg ON c.casegroupfk = cg.casegrouppk " \
-                      "JOIN casesvc.caseevent ce ON ce.casefk = c.casepk " \
-                      "JOIN samplesvc.sampleattributes sa ON " \
-                      "CONCAT(attributes->> 'TLA','', attributes->> 'REFERENCE') = cg.sampleunitref " \
-                      f"WHERE c.sampleunittype = 'H' AND cg.collectionexerciseid = '{collection_exercise_id}' " \
-                      "ORDER BY cg.sampleunitref, ce.createddatetime DESC"
+        case_status = text("SELECT DISTINCT ON (cg.sampleunitref) cg.sampleunitref, cg.status, "
+                           "CASE WHEN ce.description !~ '^[[:digit:]]*$' THEN '' ELSE ce.description END, "
+                           "attributes->> 'ADDRESS_LINE1' AS address_line_1, "
+                           "attributes->> 'ADDRESS_LINE2' AS address_line_2, "
+                           "attributes->> 'LOCALITY' AS locality, "
+                           "attributes->> 'TOWN_NAME' AS town_name, "
+                           "attributes->> 'POSTCODE' AS postcode, "
+                           "attributes->> 'COUNTRY' AS country "
+                           "FROM casesvc.case c JOIN casesvc.casegroup cg ON c.casegroupfk = cg.casegrouppk "
+                           "JOIN casesvc.caseevent ce ON ce.casefk = c.casepk "
+                           "JOIN sample.sampleattributes sa ON "
+                           "CONCAT(attributes->> 'TLA','', attributes->> 'REFERENCE') = cg.sampleunitref "
+                           "WHERE c.sampleunittype = 'H' AND cg.collectionexerciseid = :collection_exercise_id "
+                           "ORDER BY cg.sampleunitref, ce.createddatetime DESC")
 
         try:
-            case_details = engine.execute(text(case_status))
+            case_details = engine.execute(case_status, collection_exercise_id=collection_exercise_id)
         except SQLAlchemyError:
             logger.exception("SQL Alchemy query failed")
             raise
 
-        for row in case_details:
-            social = []
-            social.append(row[0])
-            social.append(row[1])
-            social.append(row[2])
-            social.append(row[3])
-            social.append(row[4])
-            social.append(row[5])
-            social.append(row[6])
-            social.append(row[7])
-            social.append(row[8])
-            ws.append(social)
+        my_data = [headers]
+        my_data.extend(case_details)
 
-        wb.save(output)
-        wb.close()
+        writer = csv.writer(output)
+        writer.writerows(my_data)
 
         response = make_response(output.getvalue(), 200)
         response.headers["Content-Disposition"] = f"attachment; filename=social_mi_report_{collection_exercise_id}.csv"
