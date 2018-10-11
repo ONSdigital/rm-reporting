@@ -134,7 +134,7 @@ class SocialMIDownload(Resource):
                            "attributes->> 'COUNTRY' AS country "
                            "FROM casesvc.case c JOIN casesvc.casegroup cg ON c.casegroupfk = cg.casegrouppk "
                            "JOIN casesvc.caseevent ce ON ce.casefk = c.casepk "
-                           "JOIN sample.sampleattributes sa ON "
+                           "JOIN samplesvc.sampleattributes sa ON "
                            "CONCAT(attributes->> 'TLA','', attributes->> 'REFERENCE') = cg.sampleunitref "
                            "WHERE c.sampleunittype = 'H' AND cg.collectionexerciseid = :collection_exercise_id "
                            "ORDER BY cg.sampleunitref, ce.createddatetime DESC")
