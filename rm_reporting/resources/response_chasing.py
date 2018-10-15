@@ -2,6 +2,7 @@ import logging
 import io
 import csv
 
+from datetime import datetime
 from flask import make_response
 from flask_restplus import Resource
 from sqlalchemy.exc import SQLAlchemyError
@@ -122,6 +123,8 @@ class SocialMIDownload(Resource):
             "Country"
         ]
 
+        datestr = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+
         engine = app.db.engine
 
         case_status = text("SELECT DISTINCT ON (cg.sampleunitref) cg.sampleunitref, cg.status, "
@@ -152,6 +155,7 @@ class SocialMIDownload(Resource):
         writer.writerows(my_data)
 
         response = make_response(output.getvalue(), 200)
-        response.headers["Content-Disposition"] = f"attachment; filename=social_mi_report_{collection_exercise_id}.csv"
+        response.headers["Content-Disposition"] = f"attachment; filename=social_mi_report_{collection_exercise_id}" \
+                                                  f"_{datestr}.csv"
         response.headers["Content-type"] = "text/csv"
         return response
