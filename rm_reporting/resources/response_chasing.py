@@ -1,6 +1,8 @@
 import logging
 import io
+import csv
 
+from datetime import datetime
 from flask import make_response
 from flask_restplus import Resource
 from sqlalchemy.exc import SQLAlchemyError
@@ -98,4 +100,62 @@ class ResponseChasingDownload(Resource):
         response = make_response(output.getvalue(), 200)
         response.headers["Content-Disposition"] = f"attachment; filename=response_chasing_{collection_exercise_id}.xlsx"
         response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        return response
+
+
+@response_chasing_api.route('/download-social-mi/<collection_exercise_id>')
+class SocialMIDownload(Resource):
+
+    @staticmethod
+    def get(collection_exercise_id):
+        output = io.StringIO()
+
+        # Set headers
+        headers = [
+            "Sample Reference",
+            "Status",
+            "Status Event",
+            "Address Line 1",
+            "Address Line 2",
+            "Locality",
+            "Town Name",
+            "Postcode",
+            "Country"
+        ]
+
+        datestr = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+
+        engine = app.db.engine
+
+        case_status = text("SELECT DISTINCT ON (cg.sampleunitref) cg.sampleunitref, cg.status, "
+                           "CASE WHEN ce.description !~ '^[[:digit:]]*$' THEN '' ELSE ce.description END, "
+                           "attributes->> 'ADDRESS_LINE1' AS address_line_1, "
+                           "attributes->> 'ADDRESS_LINE2' AS address_line_2, "
+                           "attributes->> 'LOCALITY' AS locality, "
+                           "attributes->> 'TOWN_NAME' AS town_name, "
+                           "attributes->> 'POSTCODE' AS postcode, "
+                           "attributes->> 'COUNTRY' AS country "
+                           "FROM casesvc.case c JOIN casesvc.casegroup cg ON c.casegroupfk = cg.casegrouppk "
+                           "JOIN casesvc.caseevent ce ON ce.casefk = c.casepk "
+                           "JOIN samplesvc.sampleattributes sa ON "
+                           "CONCAT(attributes->> 'TLA','', attributes->> 'REFERENCE') = cg.sampleunitref "
+                           "WHERE c.sampleunittype = 'H' AND cg.collectionexerciseid = :collection_exercise_id "
+                           "ORDER BY cg.sampleunitref, ce.createddatetime DESC")
+
+        try:
+            case_details = engine.execute(case_status, collection_exercise_id=collection_exercise_id)
+        except SQLAlchemyError:
+            logger.exception("SQL Alchemy query failed")
+            raise
+
+        my_data = [headers]
+        my_data.extend(case_details)
+
+        writer = csv.writer(output)
+        writer.writerows(my_data)
+
+        response = make_response(output.getvalue(), 200)
+        response.headers["Content-Disposition"] = f"attachment; filename=social_mi_report_{collection_exercise_id}" \
+                                                  f"_{datestr}.csv"
+        response.headers["Content-type"] = "text/csv"
         return response
