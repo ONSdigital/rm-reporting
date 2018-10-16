@@ -63,12 +63,14 @@ class ResponseChasingDownload(Resource):
                         "ORDER BY cg.status, cg.sampleunitref), " \
                         "respondent_details AS " \
                         "(SELECT e.survey_id AS survey_uuid, e.business_id AS business_party_uuid, e.status AS enrolment_status, " \
-                        "CONCAT(r.first_name, ' ', r.last_name) AS respondent_name, r.telephone, r.email_address, r.status AS respondent_status " \
+                        "CONCAT(r.first_name, ' ', r.last_name) AS respondent_name, r.telephone, " \
+                        "r.email_address, r.status AS respondent_status " \
                         "FROM partysvc.enrolment e " \
                         "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id " \
                         "WHERE " \
                         f"e.survey_id = '{survey_id}') " \
-                        "SELECT cd.case_status, bd.sampleunitref, bd.business_name, rd.enrolment_status, rd.respondent_name, rd.telephone, rd.email_address, rd.respondent_status " \
+                        "SELECT cd.case_status, bd.sampleunitref, bd.business_name, rd.enrolment_status, rd.respondent_name, " \
+                        "rd.telephone, rd.email_address, rd.respondent_status " \
                         "FROM " \
                         "case_details cd " \
                         "LEFT JOIN business_details bd ON bd.sampleunitref=cd.sampleunitref " \
