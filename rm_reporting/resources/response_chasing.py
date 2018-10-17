@@ -127,20 +127,26 @@ class SocialMIDownload(Resource):
 
         engine = app.db.engine
 
-        case_status = text("SELECT DISTINCT ON (cg.sampleunitref) cg.sampleunitref, cg.status, "
-                           "CASE WHEN ce.description !~ '^[[:digit:]]*$' THEN '' ELSE ce.description END, "
+        case_status = text("SELECT cg.sampleunitref, cg.status, "
+                           "(SELECT cat.shortdescription "
+                           "FROM casesvc.caseevent ce "
+                           "JOIN casesvc.category cat "
+                           "ON ce.categoryfk = cat.categorypk "
+                           "WHERE ce.casefk = c.casepk "
+                           "AND cat.shortdescription ~ '^[[:digit:]]*$' "
+                           "ORDER BY ce.createddatetime DESC LIMIT 1), "
                            "attributes->> 'ADDRESS_LINE1' AS address_line_1, "
                            "attributes->> 'ADDRESS_LINE2' AS address_line_2, "
                            "attributes->> 'LOCALITY' AS locality, "
                            "attributes->> 'TOWN_NAME' AS town_name, "
                            "attributes->> 'POSTCODE' AS postcode, "
                            "attributes->> 'COUNTRY' AS country "
-                           "FROM casesvc.case c JOIN casesvc.casegroup cg ON c.casegroupfk = cg.casegrouppk "
-                           "JOIN casesvc.caseevent ce ON ce.casefk = c.casepk "
-                           "JOIN samplesvc.sampleattributes sa ON "
-                           "CONCAT(attributes->> 'TLA','', attributes->> 'REFERENCE') = cg.sampleunitref "
-                           "WHERE c.sampleunittype = 'H' AND cg.collectionexerciseid = :collection_exercise_id "
-                           "ORDER BY cg.sampleunitref, ce.createddatetime DESC")
+                           "FROM casesvc.case c "
+                           "JOIN casesvc.casegroup cg "
+                           "ON c.casegroupfk = cg.casegrouppk "
+                           "JOIN sample.sampleattributes sa "
+                           "ON CONCAT(attributes->> 'TLA', '' , attributes->> 'REFERENCE') = cg.sampleunitref "
+                           "WHERE c.sampleunittype = 'H' AND cg.collectionexerciseid = :collection_exercise_id")
 
         try:
             case_details = engine.execute(case_status, collection_exercise_id=collection_exercise_id)
