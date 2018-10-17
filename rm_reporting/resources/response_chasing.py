@@ -144,7 +144,7 @@ class SocialMIDownload(Resource):
                            "FROM casesvc.case c "
                            "JOIN casesvc.casegroup cg "
                            "ON c.casegroupfk = cg.casegrouppk "
-                           "JOIN sample.sampleattributes sa "
+                           "JOIN samplesvc.sampleattributes sa "
                            "ON CONCAT(attributes->> 'TLA', '' , attributes->> 'REFERENCE') = cg.sampleunitref "
                            "WHERE c.sampleunittype = 'H' AND cg.collectionexerciseid = :collection_exercise_id")
 
