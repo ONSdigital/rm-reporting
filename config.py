@@ -8,7 +8,7 @@ cf = ONSCloudFoundry()
 class Config(object):
     DEBUG = False
     TESTING = False
-    VERSION = '0.4.0'
+    VERSION = '0.4.1'
     PORT = os.getenv('PORT', 8084)
     LOGGING_LEVEL = os.getenv('LOGGING_LEVEL', 'INFO')
     SECURITY_USER_NAME = os.getenv('SECURITY_USER_NAME')
