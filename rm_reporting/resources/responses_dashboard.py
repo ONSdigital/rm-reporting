@@ -13,105 +13,71 @@ from rm_reporting.exceptions import NoDataException
 logger = wrap_logger(logging.getLogger(__name__))
 
 
-def get_seft_report(collection_exercise_id, engine):
-    report_query = text('SELECT '
-                        'COUNT(DISTINCT(sample_unit_ref)) "Sample Size", '
-                        'CAST(SUM(enrolled) as INTEGER) "Total Enrolled", '
-                        'SUM(downloaded) "Total Downloaded", '
-                        'SUM(uploaded) "Total Uploaded" '
-                        'FROM '
-                        '(SELECT '
-                        'events.sampleunitref sample_unit_ref, '
-                        'events.sampleunittype, '
-                        'events.caseref case_ref, '
-                        'events.respondent_enrolled enrolled, '
-                        'events.collection_instrument_downloaded_ind downloaded, '
-                        'events.successful_response_upload_ind uploaded '
-                        'FROM '
-                        '(SELECT '
-                        'cg.sampleunitref, '
-                        'c.sampleunittype, '
-                        'c.caseref, '
-                        'SUM(CASE WHEN ce.categoryFK = \'RESPONDENT_ENROLED\' '
-                        'THEN 1 ELSE  0 END) respondent_enrolled, '
-                        'MAX(CASE WHEN ce.categoryFK = \'COLLECTION_INSTRUMENT_DOWNLOADED\' '
-                        'THEN 1 ELSE  0 END) collection_instrument_downloaded_ind, '
-                        'MAX(CASE WHEN ce.categoryFK = \'SUCCESSFUL_RESPONSE_UPLOAD\' '
-                        'THEN 1 ELSE  0 END) successful_response_upload_ind '
-                        'FROM casesvc.caseevent ce '
-                        'RIGHT OUTER JOIN casesvc.case c ON c.casePK = ce.caseFK '
-                        'INNER JOIN casesvc.casegroup cg ON c.casegroupFK = cg.casegroupPK '
-                        'GROUP BY cg.sampleunitref, c.sampleunittype, c.caseref, c.casePK) events) as data_records '
-                        'WHERE case_ref IN '
-                        '(SELECT c.caseref FROM casesvc.case c '
-                        'WHERE c.casegroupid IN '
-                        '(SELECT cg.id "Group ID" FROM casesvc.casegroup cg '
-                        'WHERE cg.collectionexerciseid = :collection_exercise_id))')
+def get_case_report_figures(collection_exercise_id, engine):
+    case_query = text('SELECT COUNT(id) AS "Sample Size", '
+                      'COUNT(CASE '
+                      'WHEN status = \'NOTSTARTED\' THEN 1 '
+                      'ELSE NULL '
+                      'END) AS "Not Started", '
+                      'COUNT(CASE '
+                      'WHEN status = \'INPROGRESS\' THEN 1 '
+                      'ELSE NULL '
+                      'END) AS "In Progress", '
+                      'COUNT(CASE '
+                      'WHEN status = \'COMPLETE\' THEN 1 '
+                      'ELSE NULL '
+                      'END) AS "Complete" '
+                      'FROM casesvc.casegroup '
+                      'WHERE collectionexerciseid = :collection_exercise_id')
 
-    report_details = engine.execute(report_query, collection_exercise_id=collection_exercise_id).first()
+    return engine.execute(case_query, collection_exercise_id=collection_exercise_id).first()
 
-    if any(column is None for column in report_details):
+
+def get_party_report(collection_exercise_id, engine):
+    party_query = text('SELECT COUNT(CASE enrolment.status WHEN \'ENABLED\' THEN 1 ELSE NULL END) AS "Total Enrolled", '
+                       'COUNT(CASE enrolment.status WHEN \'PENDING\' THEN 1 ELSE NULL END) AS "Total Pending" '
+                       'FROM partysvc.enrolment enrolment '
+                       'INNER JOIN partysvc.business_attributes business_attributes '
+                       'ON business_attributes.business_id = enrolment.business_id '
+                       'WHERE business_attributes.collection_exercise = :collection_exercise_id')
+
+    return engine.execute(party_query, collection_exercise_id=collection_exercise_id).first()
+
+
+def get_report_figures(collection_exercise_id, engine):
+    case_report_figures = get_case_report_figures(collection_exercise_id, engine)
+    party_report_figures = get_party_report(collection_exercise_id, engine)
+
+    if any(column is None for column in list(case_report_figures.values()) + list(party_report_figures.values())):
         raise NoDataException
 
+    return case_report_figures, party_report_figures
+
+
+def get_seft_report(collection_exercise_id, engine):
+    case_report_figures, party_report_figures = get_report_figures(collection_exercise_id, engine)
+
+    total_downloaded = case_report_figures['In Progress'] + case_report_figures['Complete']
+
     return {
-        'sampleSize': report_details['Sample Size'],
-        'accountsEnrolled': report_details['Total Enrolled'],
-        'downloads': report_details['Total Downloaded'],
-        'uploads': report_details['Total Uploaded']
+        'sampleSize': case_report_figures['Sample Size'],
+        'accountsPending': party_report_figures['Total Pending'],
+        'accountsEnrolled': party_report_figures['Total Enrolled'],
+        'downloads': total_downloaded,
+        'uploads': case_report_figures['Complete']
     }
 
 
 def get_eq_report(collection_exercise_id, engine):
-    report_query = text('SELECT '
-                        'COUNT(DISTINCT(sample_unit_ref)) "Sample Size", '
-                        'CAST(SUM(account_created) as INTEGER) "Total Accounts Created", '
-                        'CAST(SUM(enrolled) as INTEGER) "Total Enrolled", '
-                        'SUM(eq_launched) "Total Launched", '
-                        'SUM(completed) "Total Completed" '
-                        'FROM '
-                        '(SELECT '
-                        'events.sampleunitref sample_unit_ref, '
-                        'events.sampleunittype, '
-                        'events.caseref case_ref, '
-                        'events.respondent_enrolled enrolled, '
-                        'events.respondent_account_created account_created, '
-                        'events.eq_launch eq_launched, '
-                        'events.offline_response_processed completed '
-                        'FROM '
-                        '(SELECT '
-                        'cg.sampleunitref, '
-                        'c.sampleunittype, '
-                        'c.caseref, '
-                        'SUM(CASE WHEN ce.categoryFK = \'RESPONDENT_ACCOUNT_CREATED\' '
-                        'THEN 1 ELSE  0 END) respondent_account_created, '
-                        'SUM(CASE WHEN ce.categoryFK = \'RESPONDENT_ENROLED\' '
-                        'THEN 1 ELSE  0 END) respondent_enrolled, '
-                        'MAX(CASE WHEN ce.categoryFK = \'EQ_LAUNCH\' '
-                        'THEN 1 ELSE  0 END) eq_launch, '
-                        'MAX(CASE WHEN ce.categoryFK = \'OFFLINE_RESPONSE_PROCESSED\' '
-                        'THEN 1 ELSE  0 END) offline_response_processed '
-                        'FROM casesvc.caseevent ce '
-                        'RIGHT OUTER JOIN casesvc.case c ON c.casePK = ce.caseFK '
-                        'INNER JOIN casesvc.casegroup cg ON c.casegroupFK = cg.casegroupPK '
-                        'GROUP BY cg.sampleunitref, c.sampleunittype, c.caseref, c.casePK) events) as data_records '
-                        'WHERE case_ref IN '
-                        '(SELECT c.caseref FROM casesvc.case c '
-                        'WHERE c.casegroupid IN '
-                        '(SELECT cg.id "Group ID" FROM casesvc.casegroup cg '
-                        'WHERE cg.collectionexerciseid = :collection_exercise_id))')
-
-    report_details = engine.execute(report_query, collection_exercise_id=collection_exercise_id).first()
-
-    if any(column is None for column in report_details):
-        raise NoDataException
+    case_report_figures, party_report_figures = get_report_figures(collection_exercise_id, engine)
 
     return {
-        'inProgress': report_details['Total Launched'] - report_details['Total Completed'],
-        'accountsCreated': report_details['Total Accounts Created'],
-        'accountsEnrolled': report_details['Total Enrolled'],
-        'notStarted': report_details['Sample Size'] - report_details['Total Launched'],
-        'completed': report_details['Total Completed'],
-        'sampleSize': report_details['Sample Size']
+        'inProgress': case_report_figures['In Progress'],
+        'accountsPending': party_report_figures['Total Pending'],
+        'accountsEnrolled': party_report_figures['Total Enrolled'],
+        'notStarted': case_report_figures['Not Started'],
+        'completed': case_report_figures['Complete'],
+        'sampleSize': case_report_figures['Sample Size']
     }
 
 
