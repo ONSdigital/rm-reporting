@@ -45,37 +45,42 @@ class ResponseChasingDownload(Resource):
 
         engine = app.db.engine
 
-        # report_query = \
-        #     "SELECT bd.status, bd.sampleunitref, bd.name, e.status, r.status, " \
-        #     "CONCAT(r.first_name, ' ', r.last_name), r.telephone, r.email_address " \
-        #     "FROM ( " \
-        #     "SELECT cg.sampleunitref, cg.status, ba.attributes->> 'name' as name, b.party_uuid as business_uuid " \
-        #     "from partysvc.business_attributes ba " \
-        #     "JOIN casesvc.casegroup cg ON ba.collection_exercise = cast (cg.collectionexerciseid as text) " \
-        #     "LEFT JOIN partysvc.business b ON b.business_ref = cg.sampleunitref " \
-        #     f"WHERE cg.collectionexerciseid = '{collection_exercise_id}' " \
-        #     "AND ba.business_id = b.party_uuid ) AS bd " \
-        #     "LEFT JOIN partysvc.enrolment e ON bd.business_uuid = e.business_id " \
-        #     f"AND e.survey_id = '{survey_id}' " \
-        #     "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id " \
-        #     "ORDER BY bd.sampleunitref "
-
-        collex_status = "WITH business_data AS " \
-                        "(SELECT cg.sampleunitref, cg.status, ba.attributes->> 'name' AS name, " \
-                        "b.party_uuid AS business_uuid FROM partysvc.business_attributes ba, casesvc.casegroup cg " \
-                        "LEFT JOIN partysvc.business b ON b.business_ref = cg.sampleunitref " \
-                        f"WHERE cg.collectionexerciseid = '{collection_exercise_id}' AND " \
-                        f"ba.collection_exercise = '{collection_exercise_id}' AND " \
-                        "ba.business_id = b.party_uuid " \
-                        "ORDER BY cg.status, cg.sampleunitref) " \
-                        "SELECT bd.status, bd.sampleunitref, bd.name, e.status,  " \
-                        "CONCAT(r.first_name, ' ', r.last_name), r.telephone, r.email_address, r.status " \
-                        "FROM business_data bd " \
-                        "LEFT JOIN partysvc.enrolment e " \
-                        f"ON e.business_id = bd.business_uuid AND e.survey_id = '{survey_id}' " \
+        collex_status = "WITH " \
+                        "business_details AS " \
+                        "(SELECT " \
+                        "ba.collection_exercise As collection_exercise_uuid, " \
+                        "b.business_ref AS sampleunitref, " \
+                        "ba.business_id AS business_party_uuid, " \
+                        "ba.attributes->> 'name' AS business_name " \
+                        "FROM " \
+                        "partysvc.business_attributes ba, partysvc.business b " \
+                        "WHERE " \
+                        f"ba.collection_exercise = '{collection_exercise_id}' and " \
+                        "ba.business_id = b.party_uuid), " \
+                        "case_details AS " \
+                        "(SELECT " \
+                        "cg.collectionexerciseid AS collection_exercise_uuid, cg.sampleunitref, " \
+                        "cg.status AS case_status " \
+                        "FROM casesvc.casegroup cg " \
+                        f"WHERE cg.collectionexerciseid = '{collection_exercise_id}' " \
+                        "ORDER BY cg.status, cg.sampleunitref), " \
+                        "respondent_details AS " \
+                        "(SELECT e.survey_id AS survey_uuid, e.business_id AS business_party_uuid, " \
+                        "e.status AS enrolment_status, " \
+                        "CONCAT(r.first_name, ' ', r.last_name) AS respondent_name, r.telephone, " \
+                        "r.email_address, r.status AS respondent_status " \
+                        "FROM partysvc.enrolment e " \
                         "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id " \
-                        "ORDER BY bd.sampleunitref;"
-
+                        "WHERE " \
+                        f"e.survey_id = '{survey_id}') " \
+                        "SELECT cd.case_status, bd.sampleunitref, bd.business_name, " \
+                        "rd.enrolment_status, rd.respondent_name, " \
+                        "rd.telephone, rd.email_address, rd.respondent_status " \
+                        "FROM " \
+                        "case_details cd " \
+                        "LEFT JOIN business_details bd ON bd.sampleunitref=cd.sampleunitref " \
+                        "LEFT JOIN respondent_details rd ON bd.business_party_uuid = rd.business_party_uuid " \
+                        "ORDER BY sampleunitref, case_status;"
         try:
             collex_details = engine.execute(text(collex_status))
         except SQLAlchemyError:
