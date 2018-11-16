@@ -1,7 +1,7 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 
-from flask import json, Response
+from flask import Response, json
 from flask_restplus import Resource, abort
 from sqlalchemy import text
 from structlog import wrap_logger
@@ -34,7 +34,7 @@ def get_case_report_figures(collection_exercise_id, engine):
     return engine.execute(case_query, collection_exercise_id=collection_exercise_id).first()
 
 
-def get_party_report(collection_exercise_id, engine):
+def get_party_report(survey_id, collection_exercise_id, engine):
     party_query = text('SELECT COUNT(CASE enrolment.status WHEN \'ENABLED\' THEN 1 ELSE NULL END) AS "Total Enrolled", '
                        'COUNT(CASE enrolment.status WHEN \'PENDING\' THEN 1 ELSE NULL END) AS "Total Pending" '
                        'FROM partysvc.enrolment enrolment '
@@ -43,14 +43,17 @@ def get_party_report(collection_exercise_id, engine):
                        'INNER JOIN samplesvc.sampleunit sample_unit '
                        'ON sample_unit.id::text = business_attributes.attributes->> \'sampleUnitId\' '
                        'WHERE business_attributes.collection_exercise = :collection_exercise_id '
-                       'and sample_unit.sampleunitref not like \'1111%\'')
+                       'AND enrolment.survey_id = :survey_id '
+                       'AND sample_unit.sampleunitref NOT LIKE \'1111%\'')
 
-    return engine.execute(party_query, collection_exercise_id=collection_exercise_id).first()
+    return engine.execute(party_query,
+                          survey_id=survey_id,
+                          collection_exercise_id=collection_exercise_id).first()
 
 
-def get_report_figures(collection_exercise_id, engine):
+def get_report_figures(survey_id, collection_exercise_id, engine):
     case_report_figures = get_case_report_figures(collection_exercise_id, engine)
-    party_report_figures = get_party_report(collection_exercise_id, engine)
+    party_report_figures = get_party_report(survey_id, collection_exercise_id, engine)
 
     if any(column is None for column in list(case_report_figures.values()) + list(party_report_figures.values())):
         raise NoDataException
@@ -58,22 +61,8 @@ def get_report_figures(collection_exercise_id, engine):
     return case_report_figures, party_report_figures
 
 
-def get_seft_report(collection_exercise_id, engine):
-    case_report_figures, party_report_figures = get_report_figures(collection_exercise_id, engine)
-
-    total_downloaded = case_report_figures['In Progress'] + case_report_figures['Complete']
-
-    return {
-        'sampleSize': case_report_figures['Sample Size'],
-        'accountsPending': party_report_figures['Total Pending'],
-        'accountsEnrolled': party_report_figures['Total Enrolled'],
-        'downloads': total_downloaded,
-        'uploads': case_report_figures['Complete']
-    }
-
-
-def get_eq_report(collection_exercise_id, engine):
-    case_report_figures, party_report_figures = get_report_figures(collection_exercise_id, engine)
+def get_report(survey_id, collection_exercise_id, engine):
+    case_report_figures, party_report_figures = get_report_figures(survey_id, collection_exercise_id, engine)
 
     return {
         'inProgress': case_report_figures['In Progress'],
@@ -85,19 +74,11 @@ def get_eq_report(collection_exercise_id, engine):
     }
 
 
-def get_report(collection_instrument_type, collection_exercise_id, engine):
-    report_for_type = {
-        'SEFT': get_seft_report,
-        'EQ': get_eq_report
-    }
-    return report_for_type[collection_instrument_type](collection_exercise_id, engine)
-
-
-@response_dashboard_api.route('/<collection_instrument_type>/collection-exercise/<collection_exercise_id>')
+@response_dashboard_api.route('/survey/<survey_id>/collection-exercise/<collection_exercise_id>')
 class ResponseDashboard(Resource):
 
     @staticmethod
-    def get(collection_instrument_type, collection_exercise_id):
+    def get(survey_id, collection_exercise_id):
 
         engine = app.db.engine
 
@@ -107,7 +88,7 @@ class ResponseDashboard(Resource):
             abort(400, 'Malformed collection exercise ID')
 
         try:
-            report = get_report(collection_instrument_type.upper(), collection_exercise_id, engine)
+            report = get_report(survey_id, collection_exercise_id, engine)
         except KeyError:
             abort(404, 'Invalid collection instrument type')
         except NoDataException:
