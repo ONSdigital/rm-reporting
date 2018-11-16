@@ -28,7 +28,8 @@ def get_case_report_figures(collection_exercise_id, engine):
                       'ELSE NULL '
                       'END) AS "Complete" '
                       'FROM casesvc.casegroup '
-                      'WHERE collectionexerciseid = :collection_exercise_id')
+                      'WHERE collectionexerciseid = :collection_exercise_id '
+                      'AND sampleunitref NOT LIKE \'1111%\'')
 
     return engine.execute(case_query, collection_exercise_id=collection_exercise_id).first()
 
@@ -39,7 +40,10 @@ def get_party_report(collection_exercise_id, engine):
                        'FROM partysvc.enrolment enrolment '
                        'INNER JOIN partysvc.business_attributes business_attributes '
                        'ON business_attributes.business_id = enrolment.business_id '
-                       'WHERE business_attributes.collection_exercise = :collection_exercise_id')
+                       'INNER JOIN samplesvc.sampleunit sample_unit '
+                       'ON sample_unit.id::text = business_attributes.attributes->> \'sampleUnitId\' '
+                       'WHERE business_attributes.collection_exercise = :collection_exercise_id '
+                       'and sample_unit.sampleunitref not like \'1111%\'')
 
     return engine.execute(party_query, collection_exercise_id=collection_exercise_id).first()
 
