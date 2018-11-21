@@ -42,8 +42,8 @@ def get_party_report(survey_id, collection_exercise_id, engine):
                        'ON business_attributes.business_id = enrolment.business_id '
                        'INNER JOIN samplesvc.sampleunit sample_unit '
                        'ON sample_unit.id::text = business_attributes.attributes->> \'sampleUnitId\' '
-                       'WHERE business_attributes.collection_exercise = :collection_exercise_id '
-                       'AND enrolment.survey_id = :survey_id '
+                       'WHERE enrolment.survey_id = :survey_id '
+                       'AND business_attributes.collection_exercise = :collection_exercise_id '
                        'AND sample_unit.sampleunitref NOT LIKE \'1111%\'')
 
     return engine.execute(party_query,
