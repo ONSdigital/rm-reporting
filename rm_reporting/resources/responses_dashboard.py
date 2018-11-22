@@ -82,6 +82,11 @@ class ResponseDashboard(Resource):
 
         engine = app.db.engine
 
+        survey_id = parse_uuid(survey_id)
+        if not survey_id:
+            logger.debug('Malformed survey ID', invalid_id=survey_id)
+            abort(400, 'Malformed survey ID')
+
         collection_exercise_id = parse_uuid(collection_exercise_id)
         if not collection_exercise_id:
             logger.debug('Malformed collection exercise ID', invalid_id=collection_exercise_id)
@@ -89,10 +94,8 @@ class ResponseDashboard(Resource):
 
         try:
             report = get_report(survey_id, collection_exercise_id, engine)
-        except KeyError:
-            abort(404, 'Invalid collection instrument type')
         except NoDataException:
-            abort(404, 'Invalid collection exercise ID')
+            abort(404, 'Invalid collection exercise or survey ID')
 
         response = {
             'metadata': {
