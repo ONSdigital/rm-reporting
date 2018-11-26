@@ -16,7 +16,7 @@ logger = wrap_logger(logging.getLogger(__name__))
 def get_report_figures(survey_id, collection_exercise_id, engine):
     case_query = text(
         'WITH case_figures AS '
-        '(SELECT COUNT(DISTINCT sampleunitref) AS "Sample Size", '
+        '(SELECT COUNT(*) AS "Sample Size", '
         'COUNT(CASE WHEN status = \'NOTSTARTED\' THEN 1 ELSE NULL END) AS "Not Started", '
         'COUNT(CASE WHEN status = \'INPROGRESS\' THEN 1 ELSE NULL END) AS "In Progress", '
         'COUNT(CASE WHEN status = \'COMPLETE\' THEN 1 ELSE NULL END) AS "Complete" '
