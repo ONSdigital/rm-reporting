@@ -22,7 +22,7 @@ def get_report_figures(survey_id, collection_exercise_id, engine):
         'COUNT(CASE WHEN status = \'COMPLETE\' THEN 1 ELSE NULL END) AS "Complete" '
         'FROM casesvc.casegroup '
         'WHERE collectionexerciseid = :collection_exercise_id '
-        'AND sampleunitref NOT LIKE \'1%\'), '
+        'AND sampleunitref NOT LIKE \'1111%\'), '
         'survey_enrolments AS '
         '(SELECT e.business_id, e.status '
         'FROM partysvc.enrolment e '
@@ -34,7 +34,7 @@ def get_report_figures(survey_id, collection_exercise_id, engine):
         'COUNT(CASE WHEN survey_enrolments.status = \'PENDING\' THEN 1 ELSE NULL END) AS "Total Pending" '
         'FROM survey_enrolments '
         'INNER JOIN partysvc.business b ON survey_enrolments.business_id = b.party_uuid '
-        'WHERE b.business_ref NOT LIKE \'1%\') '
+        'WHERE b.business_ref NOT LIKE \'1111%\') '
         'SELECT * FROM case_figures, party_figures'
     )
 
