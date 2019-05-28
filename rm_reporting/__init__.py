@@ -20,7 +20,7 @@ def create_connection(db_connection_uri):
     def current_request():
         return _app_ctx_stack.__ident_func__()
 
-    engine = create_engine(db_connection_uri, convert_unicode=True, echo=True)
+    engine = create_engine(db_connection_uri, echo=True)
     session = scoped_session(sessionmaker(), scopefunc=current_request)
     session.configure(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
     engine.session = session
