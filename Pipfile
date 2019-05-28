@@ -7,15 +7,15 @@ name = "pypi"
 
 [packages]
 
-flask = "==0.12.2"
-flask-cors = "==3.0.3"
+flask = "*"
+flask-cors = "*"
 flask-restplus = "*"
 gunicorn = "*"
 structlog = "*"
-openpyxl = "==2.5.1"
+openpyxl = "*"
 sqlalchemy = "*"
-psycopg2 = "==2.7.4"
-cfenv = "==0.5.3"
+psycopg2-binary = "*"
+cfenv = "*"
 
 
 [dev-packages]
