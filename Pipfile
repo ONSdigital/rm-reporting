@@ -14,6 +14,7 @@ gunicorn = "*"
 structlog = "*"
 openpyxl = "*"
 sqlalchemy = "*"
+psycopg2 = "*"
 psycopg2-binary = "*"
 cfenv = "*"
 
