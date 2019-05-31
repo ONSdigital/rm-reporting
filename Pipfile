@@ -7,23 +7,24 @@ name = "pypi"
 
 [packages]
 
-flask = "==0.12.2"
-flask-cors = "==3.0.3"
-flask-restplus = "==0.10.1"
-gunicorn = "==19.7.1"
-structlog = "==17.2.0"
-openpyxl = "==2.5.1"
-sqlalchemy = "==1.2.0"
-psycopg2 = "==2.7.4"
-cfenv = "==0.5.3"
+flask = "*"
+flask-cors = "*"
+flask-restplus = "*"
+gunicorn = "*"
+structlog = "*"
+openpyxl = "*"
+sqlalchemy = "*"
+psycopg2 = "*"
+psycopg2-binary = "*"
+cfenv = "*"
 
 
 [dev-packages]
 
-pytest = "==3.3.0"
-"flake8" = "==3.5.0"
-testfixtures = "==5.3.1"
-pytest-cov = "==2.5.1"
+pytest = "*"
+"flake8" = "*"
+testfixtures = "*"
+pytest-cov = "*"
 
 
 [requires]
