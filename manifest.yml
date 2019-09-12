@@ -5,5 +5,7 @@ applications:
   health-check-type: http
   instances: 1
   memory: 512M
+  services:
+    - reporting-db
   stack: cflinuxfs2
   timeout: 180
