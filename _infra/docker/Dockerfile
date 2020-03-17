@@ -1,7 +1,7 @@
-FROM python:3.6-slim
+FROM python:3.6
 
 RUN apt-get update && apt-get install -y build-essential curl gunicorn
-RUN pip install pipenv
+RUN pip3 install pipenv==8.3.1
 
 WORKDIR /app
 
