@@ -3,42 +3,79 @@ kind: Deployment
 metadata:
   name: {{ .Chart.Name }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicas}}
   strategy:
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
+      maxSurge: {{ .Values.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.rollingUpdate.maxUnavailable }}
     type: RollingUpdate
   selector:
     matchLabels:
-      app: (( .Chart.Name }}
-      env: "{{ .Values.env }}"
+      app: {{ .Chart.Name }}
+      env: {{ .Values.env }}
   template:
     metadata:
       labels:
         app: {{ .Chart.Name }}
-        env: "{{ .Values.env }}"
+        appVersion: {{ .Chart.AppVersion }}
+        helmVersion: {{ .Chart.Version }}
+        env: {{ .Values.env }}
     spec:
+      {{- if .Values.database.sqlProxyEnabled }}
+      volumes:
+        - name: cloudsql-instance-credentials
+          secret:
+            secretName: cloudsql-proxy-credentials
+            defaultMode: 0444
+            items:
+            - key: "credentials.json"
+              path: "credentials.json"
+      {{- end }}
       containers:
+        {{- if .Values.database.sqlProxyEnabled }}
+        - name: cloudsql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.16
+          command: ["/cloud_sql_proxy",
+                    "-instances=$(SQL_INSTANCE_NAME)=tcp:$(DB_PORT)",
+                    "-ip_address_types=PRIVATE",
+                    "-credential_file=/secrets/cloudsql/credentials.json"]
+          securityContext:
+            runAsUser: 2  # non-root user
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: cloudsql-instance-credentials
+              mountPath: /secrets/cloudsql
+              readOnly: true
+          env:
+          - name: SQL_INSTANCE_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: cloudsql-proxy-config
+                key: reporting-connection-name
+          - name: DB_PORT
+            valueFrom:
+              secretKeyRef:
+                name: db-config
+                key: db-port
+        {{- end }}
         - name: {{ .Chart.Name }}
-          image: "eu.gcr.io/ons-rasrmbs-management/{{ .Chart.Name }}:{{ .Chart.AppVersion }}"
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.image.name }}/{{ .Chart.Name }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http-server
-              containerPort: 8084
+              containerPort: {{ .Values.container.port }}
           readinessProbe:
             httpGet:
               path: /info
-              port: 8084
-            initialDelaySeconds: 1
-            periodSeconds: 20
-            failureThreshold: 5
+              port: {{ .Values.container.port }}
+            periodSeconds: 5
+            failureThreshold: 3
             successThreshold: 1
             timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /info
-              port: 8084
+              port: {{ .Values.container.port }}
             initialDelaySeconds: 1
             periodSeconds: 20
             failureThreshold: 5
@@ -46,7 +83,14 @@ spec:
             timeoutSeconds: 5
           env:
           - name: DB_HOST
+            {{- if .Values.database.managedPostgres }}
+            valueFrom:
+              secretKeyRef:
+                name: db-config
+                key: db-host
+            {{- else }}
             value: $(POSTGRES_SERVICE_HOST)
+            {{- end }}
           - name: DB_PORT
             valueFrom:
               secretKeyRef:
@@ -78,8 +122,12 @@ spec:
                 name: security-credentials
                 key: security-password
           - name: PORT
-            value: "8084"
+            value: "{{ .Values.container.port }}"
           - name: DATABASE_URI
-            value: "postgres://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/postgres"
+            {{- if .Values.database.sqlProxyEnabled }}
+            value: "postgres://$(DB_USERNAME):$(DB_PASSWORD)@127.0.0.1:$(DB_PORT)/reporting"
+            {{- else }}
+            value: "postgres://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/reporting"
+            {{- end }}
           resources:
             {{ toYaml .Values.resources | nindent 12 }}
