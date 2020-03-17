@@ -1,9 +1,26 @@
-replicaCount: 1
+env: minikube
 
-env: "minikube"
+replicas: 1
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 1
 
+image:
+  name: eu.gcr.io/ons-rasrmbs-management
+  pullPolicy: Always
+
+container:
+  port: 8080
 service:
-  port: 8084
+  port: 8080
+
+database:
+  sqlProxyEnabled: false
+  managedPostgres: false
+  secrets:
+    usernameKey: username
+    passwordKey: password
+    nameKey: db-name
 
 resources:
   requests:
