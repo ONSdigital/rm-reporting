@@ -1,0 +1,21 @@
+{
+  "schema": "v2",
+  "application": "reporting",
+  "name": "reporting",
+  "template": {
+    "artifactAccount": "front50ArtifactCredentials",
+    "reference": "spinnaker://rasrmApplicationTemplate",
+    "type": "front50/pipelineTemplate"
+  },
+  "variables": {
+    "name": "reporting",
+    "defaultHelmChart": "reporting-0.1.0.tgz",
+    "helmChartMatcher": "reporting-.*\\.tgz"
+  },
+  "exclude": [],
+  "triggers": [],
+  "parameters": [],
+  "notifications": [],
+  "description": "",
+  "stages": []
+}
