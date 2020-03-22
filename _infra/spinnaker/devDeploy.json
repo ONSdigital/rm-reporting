@@ -1,16 +1,16 @@
 {
   "schema": "v2",
   "application": "reporting",
-  "name": "reporting",
+  "name": "deploy dev",
   "template": {
     "artifactAccount": "front50ArtifactCredentials",
-    "reference": "spinnaker://rasrmApplicationTemplate",
+    "reference": "spinnaker://individualDeploymentTemplate",
     "type": "front50/pipelineTemplate"
   },
   "variables": {
-    "name": "reporting",
-    "defaultHelmChart": "reporting-0.1.0.tgz",
-    "helmChartMatcher": "reporting-.*\\.tgz"
+    "namespace": "dev",
+    "environment": "dev",
+    "service": "reporting"
   },
   "exclude": [],
   "triggers": [],
