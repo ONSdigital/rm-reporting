@@ -16,6 +16,9 @@ container:
 service:
   port: 8080
 
+ingress:
+  enabled: false
+
 database:
   sqlProxyEnabled: false
   managedPostgres: false

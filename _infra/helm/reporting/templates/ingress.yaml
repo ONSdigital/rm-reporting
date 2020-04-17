@@ -1,0 +1,19 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Chart.Name }}-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: dashboard-ip
+    kubernetes.io/ingress.class: gce
+    networking.gke.io/managed-certificates: {{ .Values.ingress.gcpCertName }}
+spec:
+  rules:
+  - host: {{ .Values.ingress.gcpHost | quote }}
+    http:
+      paths:
+      - path: /*
+        backend:
+          serviceName: {{ .Chart.Name }}
+          servicePort: {{ .Values.service.port }}
+{{- end }}
