@@ -25,7 +25,7 @@ class TestLoggerConfig(unittest.TestCase):
         logger.error('Test')
         message = l.records[0].msg
 
-        message_contents = '{\n "event": "Test",\n "level": "error",\n "service": "rm-reporting"'
+        message_contents = '{\n "event": "Test",\n "severity": "error",\n "level": "error",\n "service": "rm-reporting"'
         self.assertIn(message_contents, message)
 
     @pytest.mark.filterwarnings(f"ignore:{testfixtures_warning}")
@@ -36,7 +36,7 @@ class TestLoggerConfig(unittest.TestCase):
         logger = wrap_logger(logging.getLogger())
         logger.error('Test')
         message = l.records[0].msg
-        self.assertIn('{"event": "Test", "level": "error", "service": "rm-reporting"', message)
+        self.assertIn('{"event": "Test", "severity": "error", "level": "error", "service": "rm-reporting"', message)
 
     @pytest.mark.filterwarnings(f"ignore:{testfixtures_warning}")
     @log_capture()
@@ -45,4 +45,4 @@ class TestLoggerConfig(unittest.TestCase):
         logger = wrap_logger(logging.getLogger())
         logger.error('Test')
         message = l.records[0].msg
-        self.assertIn('{"event": "Test", "level": "error", "service": "rm-reporting"', message)
+        self.assertIn('{"event": "Test", "severity": "error", "level": "error", "service": "rm-reporting"', message)
