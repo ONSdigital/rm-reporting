@@ -1,9 +1,5 @@
 import os
 
-from rm_reporting.cloud.cloudfoundry import ONSCloudFoundry
-
-cf = ONSCloudFoundry()
-
 
 class Config(object):
     DEBUG = False
@@ -15,11 +11,7 @@ class Config(object):
     SECURITY_USER_PASSWORD = os.getenv('SECURITY_USER_PASSWORD')
     BASIC_AUTH = (SECURITY_USER_NAME, SECURITY_USER_PASSWORD)
 
-    if cf.detected:
-        DATABASE_URI = cf.db.credentials['uri']
-    else:
-        DATABASE_URI = os.getenv('DATABASE_URI',
-                                 'postgresql://postgres:postgres@localhost:6432/postgres')
+    DATABASE_URI = os.getenv('DATABASE_URI', 'postgresql://postgres:postgres@localhost:5432/postgres')
 
 
 class DevelopmentConfig(Config):
