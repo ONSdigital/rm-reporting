@@ -1,6 +1,4 @@
-# This is a basic workflow to help you get started with Actions
-
-name: CI
+name: Build
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -13,26 +11,46 @@ on:
 env:
   GITHUB_SHA: ${{ github.sha }}
   GITHUB_REF: ${{ github.ref }}
-  IMAGE: reporting
+  IMAGE: action
   REGISTRY_HOSTNAME: eu.gcr.io
   HOST: ${{ secrets.GOOGLE_PROJECT_ID }}
-  HELM_PATH: _infra/helm/reporting
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
+  # This workflow contains a single job called "build & package"
   build:
-    name: Build
+    name: Build Test & Package
     runs-on: ubuntu-latest
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps port 6379 on service container to the host
+          - 6379:6379
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 8
-        uses: actions/setup-java@v1
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          java-version: 1.8
-      - name: Run Tests
-        run: make verify
-
+          python-version: '3.8'
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+          pipenv install --dev
+      - name: Test
+        run: |
+          make lint
+          make unit-tests
+          make integration-tests
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           version: '270.0.0'
@@ -41,9 +59,13 @@ jobs:
       - run: |
           gcloud auth configure-docker
         # Build the Docker image
-      - name: Build
+      - name: Build Docker Image
         run: |
-          docker build -t "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":$GITHUB_SHA -f _infra/docker/Dockerfile .
+          docker build -t "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":latest -f ./_infra/docker/Dockerfile .
+      - name: Publish Docker Image
+        if: github.ref == 'refs/heads/master'
+        run: |
+          docker push "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":latest
       - name: package helm
         run: |
           helm dep up _infra/helm/reporting
@@ -52,10 +74,10 @@ jobs:
         if: github.ref == 'refs/heads/master'
         run: |
           gsutil cp reporting-*.tgz gs://ras-rm-artifacts/reporting/
-    # - uses: 8398a7/action-slack@v3
-    #   with:
-    #     status: ${{ job.status }}
-    #     fields: repo,message,commit,author,action,eventName,ref,workflow # selectable (default: repo,message)
-    #   env:
-    #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-    #   if: failure()
+      - uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow # selectable (default: repo,message)
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: failure()

@@ -11,7 +11,3 @@ test: lint
 
 start:
 	pipenv run python run.py
-
-verify:
-	mvn clean verify
-	cp target/iacsvc-unversioned.jar ./iacsvc.jar
