@@ -51,9 +51,7 @@ jobs:
           pipenv install --dev
       - name: Test
         run: |
-          make lint
-          make unit-tests
-          make integration-tests
+          make test
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           version: '270.0.0'
