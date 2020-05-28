@@ -32,12 +32,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.6'
-      - name: Get Dependencies
-        run: |
-          pip install pipenv
-          pipenv install --dev --deploy
-      - name: Run Tests
-        run: make test
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           version: '270.0.0'
