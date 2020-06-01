@@ -1,7 +1,7 @@
-FROM python:3.6
+FROM python:3.8
 
 RUN apt-get update && apt-get install -y build-essential curl gunicorn
-RUN pip3 install pipenv==8.3.1
+RUN pip install pipenv
 
 WORKDIR /app
 
