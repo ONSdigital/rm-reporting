@@ -9,7 +9,7 @@ name = "pypi"
 
 flask = "*"
 flask-cors = "*"
-flask-restplus = "*"
+flask-restx = "*"
 gunicorn = "*"
 structlog = "*"
 openpyxl = "*"

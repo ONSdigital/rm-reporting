@@ -3,7 +3,7 @@ import os
 
 from flask import Flask
 from flask_cors import CORS
-from flask_restplus import Api, Namespace
+from flask_restx import Api, Namespace
 
 from rm_reporting.logger_config import logger_initial_config
 from sqlalchemy import create_engine

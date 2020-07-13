@@ -4,7 +4,7 @@ import csv
 
 from datetime import datetime
 from flask import make_response
-from flask_restplus import Resource
+from flask_restx import Resource
 from sqlalchemy.exc import SQLAlchemyError
 from openpyxl import Workbook
 from structlog import wrap_logger
