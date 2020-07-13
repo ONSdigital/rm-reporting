@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from flask import Response, json
-from flask_restplus import Resource, abort
+from flask_restx import Resource, abort
 from sqlalchemy import text
 from structlog import wrap_logger
 

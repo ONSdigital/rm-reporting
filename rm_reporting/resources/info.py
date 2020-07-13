@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from flask import make_response, jsonify
-from flask_restplus import Resource
+from flask_restx import Resource
 
 from rm_reporting import api, app
 
