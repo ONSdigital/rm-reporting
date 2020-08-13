@@ -9,7 +9,7 @@
   },
   "variables": {
     "service": "reporting",
-    "defaultVersion": "1.0.0",
+    "defaultVersion": "0.2.2",
     "devDeploymentCluster": "dev",
     "devDeploymentNamespace": "dev"
   },
