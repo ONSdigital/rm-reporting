@@ -104,10 +104,10 @@ jobs:
             NEW_VERSION="appVersion: $(echo ${{ steps.vars.outputs.tag }} | sed -e "s/[0-9]\{1,3\}/$NEW_PATCH/3")"
             echo "new version: $NEW_VERSION"
 
-            git config user.name "ras-rm-bot"
+            git config user.name "ras-rm-pr-bot"
             git config user.email "${{ secrets.BOT_EMAIL }}"
 
-            git remote set-url origin https://ras-rm-bot:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+            git remote set-url origin https://ras-rm-pr-bot:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
 
             git remote update
             git fetch
