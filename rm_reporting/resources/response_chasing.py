@@ -47,7 +47,7 @@ class ResponseChasingDownload(Resource):
 
         collex_status = "WITH " \
                         "business_details AS " \
-                        "(SELECT " \
+                        "(SELECT DISTINCT" \
                         "ba.collection_exercise As collection_exercise_uuid, " \
                         "b.business_ref AS sampleunitref, " \
                         "ba.business_id AS business_party_uuid, " \
@@ -73,7 +73,7 @@ class ResponseChasingDownload(Resource):
                         "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id " \
                         "WHERE " \
                         f"e.survey_id = '{survey_id}') " \
-                        "SELECT DISTINCT cd.case_status, bd.sampleunitref, bd.business_name, " \
+                        "SELECT cd.case_status, bd.sampleunitref, bd.business_name, " \
                         "rd.enrolment_status, rd.respondent_name, " \
                         "rd.telephone, rd.email_address, rd.respondent_status " \
                         "FROM " \
