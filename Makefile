@@ -1,6 +1,6 @@
 .PHONY: build test start
 
-install:
+build:
 	pipenv install --dev
 
 lint:
