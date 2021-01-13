@@ -133,5 +133,31 @@ spec:
             {{- else }}
             value: "postgres://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
             {{- end }}
+          - name: GOOGLE_CLOUD_PROJECT
+            value: "{{ .Values.gcp.project }}"
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /var/secrets/google/credentials.json
+          - name: GCS_BUCKET_NAME
+            value: "{{ .Values.gcp.bucket }}"
+          - name: AWS_ENABLED
+            value: "{{ .Values.aws.enabled }}"
+          {{- if .Values.aws.enabled }}
+          - name: S3_BUCKET
+            value: "{{ .Values.aws.bucket }}"
+          {{- end }}
+          {{- if .Values.aws.enabled }}
+          - name: S3_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: aws-credentials
+                key: aws-key
+          {{- end }}
+          {{- if .Values.aws.enabled }}
+          - name: S3_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: aws-credentials
+                key: aws-secret
+          {{- end }}
           resources:
             {{ toYaml .Values.resources | nindent 12 }}

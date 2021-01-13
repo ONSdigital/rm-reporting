@@ -37,6 +37,15 @@ database:
     passwordKey: password
     nameKey: db-name
 
-resources:
-  requests:
-    memory: "256Mi"
+crons:
+  sppReportScheduler:
+    name: rm-reporting-spp-reporting-scheduler
+    cron: "0 23 * * *"
+    target: "spp-reporting-api/v1/spp-reporting/send-report"
+
+gcp:
+  project: ras-rm-sandbox
+  bucket: ras-rm-notify-test
+
+aws:
+  enabled: false

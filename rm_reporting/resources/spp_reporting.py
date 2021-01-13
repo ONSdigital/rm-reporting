@@ -166,33 +166,31 @@ class SppSendReport(Resource):
     @staticmethod
     def post():
         engine = app.db.engine
-        try:
-            collex_survey = get_collection_exercise_and_survey(engine)
-            survey_id = collex_survey[0]
-            collection_exercise_id = collex_survey[1]
-            case_details = get_case_details(survey_id, collection_exercise_id, engine)
-            survey_response_status = {'surveyId': survey_id, 'collectionExerciseId': collection_exercise_id}
-            reporting_unit_respondent_information = {'surveyId': survey_id}
-            populate_json_record(
-                survey_id,
-                case_details,
-                survey_response_status,
-                reporting_unit_respondent_information,
-                engine)
-            day = datetime.today().strftime('%d%m%Y')
-            ccsi_file_name = "CCSI"+day+".json"
-            rci_file_name = "RCI"+day+".json"
-            gcs = GoogleCloudStorageGateway(app.config)
-            gcs.upload_spp_file_to_gcs(
-                file_name=ccsi_file_name, file=survey_response_status)
-            gcs.upload_spp_file_to_gcs(
-                file_name=rci_file_name, file=reporting_unit_respondent_information)
+        collex_survey = get_collection_exercise_and_survey(engine)
+        survey_id = collex_survey[0]
+        collection_exercise_id = collex_survey[1]
+        case_details = get_case_details(survey_id, collection_exercise_id, engine)
+        survey_response_status = {'surveyId': survey_id, 'collectionExerciseId': collection_exercise_id}
+        reporting_unit_respondent_information = {'surveyId': survey_id}
+        populate_json_record(
+            survey_id,
+            case_details,
+            survey_response_status,
+            reporting_unit_respondent_information,
+            engine)
+        day = datetime.today().strftime('%d%m%Y')
+        ccsi_file_name = "CCSI" + day + ".json"
+        rci_file_name = "RCI" + day + ".json"
+        gcs = GoogleCloudStorageGateway(app.config)
+        gcs.upload_spp_file_to_gcs(
+            file_name=ccsi_file_name, file=survey_response_status)
+        gcs.upload_spp_file_to_gcs(
+            file_name=rci_file_name, file=reporting_unit_respondent_information)
+        if app.config['AWS_ENABLED']:
             s3 = SimpleStorageServiceGateway(app.config)
             s3.upload_spp_file(
                 file_name=ccsi_file_name, file=survey_response_status)
             s3.upload_spp_file(
                 file_name=rci_file_name, file=reporting_unit_respondent_information)
-
-        except NoDataException:
-            abort(404, 'Something went wrong')
-        return make_response(reporting_unit_respondent_information, 200)
+        return make_response(f'The SPP reporting process has completed. Files {ccsi_file_name} and {rci_file_name} '
+                             'been uploaded to S3 successfully.', 200)

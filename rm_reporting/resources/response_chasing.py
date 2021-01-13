@@ -82,7 +82,7 @@ class ResponseChasingDownload(Resource):
                         "LEFT JOIN respondent_details rd ON bd.business_party_uuid = rd.business_party_uuid " \
                         "ORDER BY sampleunitref, case_status;"
         try:
-            collex_details = engine.execute(text(collex_status))
+            collex_details = engine.execute(text(collex_status)).first()
         except SQLAlchemyError:
             logger.exception("SQL Alchemy query failed")
             raise
