@@ -1,23 +1,17 @@
 import logging
-
-import logging
 from datetime import datetime
 
-from flask import Response, json, make_response
-from flask_restx import Resource, abort
+from flask import make_response
+from flask_restx import Resource
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
 
-from rm_reporting import app, response_dashboard_api, api
+from rm_reporting import app
+from rm_reporting import spp_reporting_api
 from rm_reporting.common.gcs_gateway import GoogleCloudStorageGateway
 from rm_reporting.common.s3_gateway import SimpleStorageServiceGateway
-from rm_reporting.common.validators import parse_uuid
 from rm_reporting.exceptions import NoDataException
-from flask_restx import Resource
-from structlog import wrap_logger
-
-from rm_reporting import spp_reporting_api
 
 logger = wrap_logger(logging.getLogger(__name__))
 
@@ -34,6 +28,7 @@ def get_respondents(business_party_id, survey_id, engine):
             'telephone': row[2],
             'email': row[3],
             'accountStatus': row[4],
+            'enrolmentStatus': row[5]
         }
         respondents.append(respondent)
     return respondents
@@ -44,7 +39,8 @@ def get_respondent_details(business_party_id, engine, survey_id):
                        "CONCAT(r.first_name, ' ', r.last_name) AS respondent_name, " \
                        "r.telephone,  " \
                        "r.email_address,  " \
-                       "r.status " \
+                       "r.status, " \
+                       "e.status  " \
                        "FROM  " \
                        "partysvc.enrolment e " \
                        "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id " \
@@ -64,7 +60,7 @@ def get_collection_exercise_and_survey(engine):
     collex_query = text(
         'SELECT c.survey_uuid AS surveyId, c.id as collectionExerciseId '
         'FROM collectionexercise.collectionexercise c '
-        'where survey_uuid = (select id from survey.survey where shortname = \'QBS\') '
+        'where survey_uuid = (select id from survey.survey where shortname = \'RSI\') '
         'AND statefk = \'LIVE\''
     )
 
@@ -85,21 +81,21 @@ def populate_json_record(
     collection_cases = []
     reporting_units = []
     for row in case_details:
-        respondents = get_respondents(row[5], survey_id, engine)
+        respondents = get_respondents(row[4], survey_id, engine)
         collection_case = {
             'id': row[0],
             'reportingUnitRef': row[1],
             'reportingUnitName': row[2],
-            'enrolmentStatus': row[3],
-            'surveyReturnStatus': row[4],
+            'surveyReturnStatus': row[3],
             'respondents': respondents
         }
-        if row[5] is not None:
-            reporting_unit = {
-                'id': row[5],
-                'respondents': respondents
-            }
-            reporting_units.append(reporting_unit)
+        reporting_unit = {
+            'id': row[4],
+            'reportingUnitRef': row[1],
+            'reportingUnitName': row[2],
+            'respondents': respondents
+        }
+        reporting_units.append(reporting_unit)
         collection_cases.append(collection_case)
     survey_response_status['collectionCases'] = collection_cases
     reporting_unit_respondent_information['reportingUnitRespondents'] = reporting_units
@@ -132,8 +128,7 @@ def get_case_details(survey_id, collection_exercise_id, engine):
                  "ORDER BY  " \
                  "cg.status, cg.sampleunitref),  " \
                  "respondent_details AS " \
-                 "(SELECT e.business_id AS business_party_uuid, " \
-                 "e.status AS enrolment_status " \
+                 "(SELECT e.business_id AS business_party_uuid " \
                  "FROM  " \
                  "partysvc.enrolment e " \
                  "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id " \
@@ -143,7 +138,6 @@ def get_case_details(survey_id, collection_exercise_id, engine):
                  "DISTINCT cd.id as caseId,  " \
                  "bd.sampleunitref,  " \
                  "bd.business_name,  " \
-                 "rd.enrolment_status,  " \
                  "cd.case_status,  " \
                  "rd.business_party_uuid " \
                  "FROM " \
