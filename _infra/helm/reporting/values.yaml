@@ -44,8 +44,8 @@ crons:
     target: "spp-reporting-api/v1/spp-reporting/send-report"
 
 gcp:
-  project: ras-rm-sandbox
-  bucket: ras-rm-notify-test
+  project: ras-rm-dev
+  bucket: ras-rm-spp-report-dev
 
 aws:
   enabled: false

@@ -21,11 +21,11 @@ spec:
         helmVersion: {{ .Chart.Version }}
         env: {{ .Values.env }}
     spec:
-      {{- if .Values.database.sqlProxyEnabled }}
       volumes:
         - name: google-cloud-key
           secret:
             secretName: google-application-credentials
+        {{- if .Values.database.sqlProxyEnabled }}
         - name: cloudsql-instance-credentials
           secret:
             secretName: cloudsql-proxy-credentials
@@ -33,7 +33,7 @@ spec:
             items:
             - key: "credentials.json"
               path: "credentials.json"
-      {{- end }}
+        {{- end }}
       containers:
         {{- if .Values.database.sqlProxyEnabled }}
         - name: cloudsql-proxy
@@ -155,15 +155,15 @@ spec:
           - name: S3_ACCESS_KEY
             valueFrom:
               secretKeyRef:
-                name: aws-credentials
-                key: aws-key
+                name: spp-aws-credentials
+                key: spp-aws-key
           {{- end }}
           {{- if .Values.aws.enabled }}
           - name: S3_SECRET_KEY
             valueFrom:
               secretKeyRef:
-                name: aws-credentials
-                key: aws-secret
+                name: spp-aws-credentials
+                key: spp-aws-secret
           {{- end }}
           resources:
             {{ toYaml .Values.resources | nindent 12 }}

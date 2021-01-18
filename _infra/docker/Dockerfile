@@ -8,5 +8,5 @@ WORKDIR /app
 COPY . /app
 RUN pipenv install --deploy --system
 
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "rm_reporting:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "rm_reporting:app", "-w=4"]
 
