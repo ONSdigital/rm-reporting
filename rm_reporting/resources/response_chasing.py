@@ -47,7 +47,7 @@ class ResponseChasingDownload(Resource):
 
         collex_status = "WITH " \
                         "business_details AS " \
-                        "(SELECT " \
+                        "(SELECT DISTINCT " \
                         "ba.collection_exercise As collection_exercise_uuid, " \
                         "b.business_ref AS sampleunitref, " \
                         "ba.business_id AS business_party_uuid, " \
