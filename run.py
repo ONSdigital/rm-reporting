@@ -18,4 +18,4 @@ if __name__ == '__main__':
     logger_initial_config(service_name='rm_reporting', log_level=app.config['LOGGING_LEVEL'])
 
     logger.info(f"Starting listening on port {app.config['PORT']}")
-    app.run(debug=app.config['DEBUG'], host='0.0.0.0', port=int(app.config['PORT']))
+    app.run(debug=app.config['INFO'], host='0.0.0.0', port=int(app.config['PORT']))
