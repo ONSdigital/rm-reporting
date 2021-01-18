@@ -180,7 +180,7 @@ class SppSendReport(Resource):
             file_name=ccsi_file_name, file=survey_response_status)
         gcs.upload_spp_file_to_gcs(
             file_name=rci_file_name, file=reporting_unit_respondent_information)
-        if app.config['AWS_ENABLED']:
+        if app.config['AWS_ENABLED'] == 'true':
             s3 = SimpleStorageServiceGateway(app.config)
             s3.upload_spp_file(
                 file_name=ccsi_file_name, file=survey_response_status)

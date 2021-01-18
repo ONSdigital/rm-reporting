@@ -16,7 +16,7 @@ class Config(object):
     S3_BUCKET = os.getenv('S3_BUCKET')
     S3_ACCESS_KEY = os.getenv('S3_ACCESS_KEY')
     S3_SECRET_KEY = os.getenv('S3_SECRET_KEY')
-    AWS_ENABLED = os.getenv('AWS_ENABLED', False)
+    AWS_ENABLED = os.getenv('AWS_ENABLED', 'false')
 
 
 class DevelopmentConfig(Config):

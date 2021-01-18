@@ -148,7 +148,7 @@ spec:
           - name: GCS_BUCKET_PREFIX
             value: "{{ .Values.gcp.bucket.prefix }}"
           - name: AWS_ENABLED
-            value: {{- if .Values.aws.enabled }}
+            value: "{{ .Values.aws.enabled }}"
           {{- if .Values.aws.enabled }}
           - name: S3_BUCKET
             value: "{{ .Values.aws.bucket }}"
