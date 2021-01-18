@@ -144,9 +144,11 @@ spec:
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/credentials.json
           - name: GCS_BUCKET_NAME
-            value: "{{ .Values.gcp.bucket }}"
+            value: "{{ .Values.gcp.bucket.name }}"
+          - name: GCS_BUCKET_PREFIX
+              value: "{{ .Values.gcp.bucket.prefix }}"
           - name: AWS_ENABLED
-            value: "{{ .Values.aws.enabled }}"
+            value: {{ .Values.aws.enabled }}
           {{- if .Values.aws.enabled }}
           - name: S3_BUCKET
             value: "{{ .Values.aws.bucket }}"
@@ -155,14 +157,14 @@ spec:
           - name: S3_ACCESS_KEY
             valueFrom:
               secretKeyRef:
-                name: spp-aws-credentials
+                name: {{ .Chart.Name }}
                 key: spp-aws-key
           {{- end }}
           {{- if .Values.aws.enabled }}
           - name: S3_SECRET_KEY
             valueFrom:
               secretKeyRef:
-                name: spp-aws-credentials
+                name: {{ .Chart.Name }}
                 key: spp-aws-secret
           {{- end }}
           resources:

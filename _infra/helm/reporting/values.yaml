@@ -45,7 +45,9 @@ crons:
 
 gcp:
   project: ras-rm-dev
-  bucket: ras-rm-spp-report-dev
+  bucket:
+    name: "ras-rm-spp-report-dev"
+    prefix: ""
 
 aws:
   enabled: false
