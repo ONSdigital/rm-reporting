@@ -1,10 +1,7 @@
 import json
 import logging
-from uuid import UUID
 
 import boto3
-from botocore.exceptions import NoCredentialsError
-
 from structlog import wrap_logger
 
 from rm_reporting.common.validators import UUIDEncoder
