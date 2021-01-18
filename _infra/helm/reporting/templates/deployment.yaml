@@ -23,6 +23,9 @@ spec:
     spec:
       {{- if .Values.database.sqlProxyEnabled }}
       volumes:
+        - name: google-cloud-key
+          secret:
+            secretName: google-application-credentials
         - name: cloudsql-instance-credentials
           secret:
             secretName: cloudsql-proxy-credentials
