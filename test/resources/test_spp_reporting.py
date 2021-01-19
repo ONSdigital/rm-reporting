@@ -32,3 +32,13 @@ class TestSppSendReport(TestCase):
             '/spp-reporting-api/v1/spp-reporting/send-report')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.status, '200 OK')
+
+    @mock.patch('rm_reporting.resources.spp_reporting.get_collection_exercise_and_survey')
+    def test_dashboard_report_fail(self,
+                                   mock_get_collection_exercise_and_survey):
+        mock_get_collection_exercise_and_survey.return_value = []
+
+        response = self.test_client.post(
+            '/spp-reporting-api/v1/spp-reporting/send-report')
+        self.assertEqual(404, response.status_code)
+        self.assertEqual('404 NOT FOUND', response.status)
