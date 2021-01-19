@@ -13,6 +13,7 @@ class Config(object):
     DATABASE_URI = os.getenv('DATABASE_URI', 'postgresql://postgres:postgres@localhost:5432/ras')
     GOOGLE_CLOUD_PROJECT = os.getenv('GOOGLE_CLOUD_PROJECT')
     GCS_BUCKET_NAME = os.getenv('GCS_BUCKET_NAME')
+    GCS_BUCKET_PREFIX = os.getenv('GCS_BUCKET_PREFIX')
     S3_BUCKET = os.getenv('S3_BUCKET')
     S3_ACCESS_KEY = os.getenv('S3_ACCESS_KEY')
     S3_SECRET_KEY = os.getenv('S3_SECRET_KEY')

@@ -1,6 +1,6 @@
 FROM python:3.9-slim
 
-RUN apt-get update && apt-get install -y build-essential curl gunicorn
+RUN apt update && apt install -y build-essential curl gunicorn
 RUN pip install pipenv
 
 WORKDIR /app
@@ -8,5 +8,5 @@ WORKDIR /app
 COPY . /app
 RUN pipenv install --deploy --system
 
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "--workers", "4", "--timeout", "0", "--keep-alive", "2", "rm_reporting:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "--worker-class", "gevent", "--worker-connections" ,"1000", "--timeout", "0", "--keep-alive", "2", "rm_reporting:app"]
 
