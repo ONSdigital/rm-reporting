@@ -11,7 +11,6 @@ from rm_reporting import app
 from rm_reporting import spp_reporting_api
 from rm_reporting.common.gcs_gateway import GoogleCloudStorageGateway
 from rm_reporting.common.s3_gateway import SimpleStorageServiceGateway
-from rm_reporting.exceptions import NoDataException
 
 logger = wrap_logger(logging.getLogger(__name__))
 
@@ -65,6 +64,8 @@ def get_collection_exercise_and_survey(engine):
     )
 
     collex_survey = engine.execute(collex_query).first()
+    if any(column is None for column in collex_survey.values()):
+        raise AttributeError
     return collex_survey
 
 
@@ -151,9 +152,10 @@ def get_case_details(survey_id, collection_exercise_id, engine):
 
 
 def get_spp_report_data(engine):
-    collex_survey = get_collection_exercise_and_survey(engine)
-    if any(column is None for column in collex_survey.values()):
-        raise AttributeError
+    try:
+        collex_survey = get_collection_exercise_and_survey(engine)
+    except AttributeError as e:
+        raise e
     survey_id = collex_survey[0]
     collection_exercise_id = collex_survey[1]
     case_details = get_case_details(survey_id, collection_exercise_id, engine)
@@ -187,7 +189,8 @@ class SppSendReport(Resource):
     def post():
         try:
             engine = app.db.engine
-            case_details, reporting_unit_respondent_information, survey_id, survey_response_status = get_spp_report_data(engine)
+            case_details, reporting_unit_respondent_information, survey_id, survey_response_status = \
+                get_spp_report_data(engine)
         except AttributeError:
             abort(404, 'No collection exercise or survey ID')
         except IndexError:
