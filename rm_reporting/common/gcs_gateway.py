@@ -15,7 +15,7 @@ class GoogleCloudStorageGateway:
         self.project_id = config['GOOGLE_CLOUD_PROJECT']
         self.bucket_name = config['GCS_BUCKET_NAME']
         self.client = storage.Client(project=self.project_id)
-        self.bucket = self.client.get_bucket(self.bucket_name)
+        self.bucket = self.client.bucket(self.bucket_name)
         self.prefix = config['GCS_BUCKET_PREFIX']
 
     def _upload_json_file_to_gcs(self, file_name, file):
