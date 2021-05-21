@@ -3,13 +3,13 @@ from datetime import datetime
 
 from flask import make_response
 from flask_restx import Resource, abort
-from flatten_json import flatten_json
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
 
 from rm_reporting import app
 from rm_reporting import spp_reporting_api
+from rm_reporting.common.flatten_json import flatten_json
 from rm_reporting.common.gcs_gateway import GoogleCloudStorageGateway
 from rm_reporting.common.s3_gateway import SimpleStorageServiceGateway
 
