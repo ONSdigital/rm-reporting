@@ -3,6 +3,7 @@ from datetime import datetime
 
 from flask import make_response
 from flask_restx import Resource, abort
+from flatten_json import flatten_json
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
@@ -201,7 +202,8 @@ class SppSendReport(Resource):
             survey_response_status,
             reporting_unit_respondent_information,
             engine)
-        ccsi_file_name, rci_file_name = upload_spp_files(reporting_unit_respondent_information,
-                                                         survey_response_status)
+
+        ccsi_file_name, rci_file_name = upload_spp_files(flatten_json(reporting_unit_respondent_information),
+                                                         flatten_json(survey_response_status))
         return make_response(f'The SPP reporting process has completed. Files {ccsi_file_name} and {rci_file_name} '
                              'been uploaded to S3 successfully.', 200)
