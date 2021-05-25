@@ -9,6 +9,7 @@ from structlog import wrap_logger
 
 from rm_reporting import app
 from rm_reporting import spp_reporting_api
+from rm_reporting.common.flatten_json import flatten_json
 from rm_reporting.common.gcs_gateway import GoogleCloudStorageGateway
 from rm_reporting.common.s3_gateway import SimpleStorageServiceGateway
 
@@ -201,7 +202,8 @@ class SppSendReport(Resource):
             survey_response_status,
             reporting_unit_respondent_information,
             engine)
-        ccsi_file_name, rci_file_name = upload_spp_files(reporting_unit_respondent_information,
-                                                         survey_response_status)
+
+        ccsi_file_name, rci_file_name = upload_spp_files(flatten_json(reporting_unit_respondent_information),
+                                                         flatten_json(survey_response_status))
         return make_response(f'The SPP reporting process has completed. Files {ccsi_file_name} and {rci_file_name} '
                              'been uploaded to S3 successfully.', 200)
