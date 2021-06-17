@@ -49,7 +49,7 @@ class ResponseChasingDownload(Resource):
                         "business_details AS " \
                         "(SELECT DISTINCT " \
                         "ba.collection_exercise As collection_exercise_uuid, " \
-                        "b.business_ref AS sampleunitref, " \
+                        "b.business_ref AS sample_unit_ref, " \
                         "ba.business_id AS business_party_uuid, " \
                         "ba.attributes->> 'name' AS business_name " \
                         "FROM " \
@@ -59,11 +59,11 @@ class ResponseChasingDownload(Resource):
                         "ba.business_id = b.party_uuid), " \
                         "case_details AS " \
                         "(SELECT " \
-                        "cg.collectionexerciseid AS collection_exercise_uuid, cg.sampleunitref, " \
+                        "cg.collectionexerciseid AS collection_exercise_uuid, cg.sample_unit_ref, " \
                         "cg.status AS case_status " \
                         "FROM casesvc.casegroup cg " \
-                        f"WHERE cg.collectionexerciseid = '{collection_exercise_id}' " \
-                        "ORDER BY cg.status, cg.sampleunitref), " \
+                        f"WHERE cg.collection_exercise_id = '{collection_exercise_id}' " \
+                        "ORDER BY cg.status, cg.sample_unit_ref), " \
                         "respondent_details AS " \
                         "(SELECT e.survey_id AS survey_uuid, e.business_id AS business_party_uuid, " \
                         "e.status AS enrolment_status, " \
@@ -73,14 +73,14 @@ class ResponseChasingDownload(Resource):
                         "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id " \
                         "WHERE " \
                         f"e.survey_id = '{survey_id}') " \
-                        "SELECT cd.case_status, bd.sampleunitref, bd.business_name, " \
+                        "SELECT cd.case_status, bd.sample_unit_ref, bd.business_name, " \
                         "rd.enrolment_status, rd.respondent_name, " \
                         "rd.telephone, rd.email_address, rd.respondent_status " \
                         "FROM " \
                         "case_details cd " \
                         "LEFT JOIN business_details bd ON bd.sampleunitref=cd.sampleunitref " \
                         "LEFT JOIN respondent_details rd ON bd.business_party_uuid = rd.business_party_uuid " \
-                        "ORDER BY sampleunitref, case_status;"
+                        "ORDER BY sample_unit_ref, case_status;"
         try:
             collex_details = engine.execute(text(collex_status))
         except SQLAlchemyError:

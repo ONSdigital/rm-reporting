@@ -102,7 +102,7 @@ def populate_json_record(
 def get_case_details(survey_id, collection_exercise_id, engine):
     case_query = "WITH business_details AS " \
                  "(SELECT ba.collection_exercise As collection_exercise_uuid, " \
-                 "b.business_ref AS sampleunitref,  " \
+                 "b.business_ref AS sample_unit_ref,  " \
                  "ba.business_id AS business_party_uuid, " \
                  "ba.attributes->> 'name' AS business_name " \
                  "FROM " \
@@ -112,19 +112,19 @@ def get_case_details(survey_id, collection_exercise_id, engine):
                  "AND " \
                  "ba.business_id = b.party_uuid),  " \
                  "case_details AS " \
-                 "(SELECT cg.sampleunitref, " \
+                 "(SELECT cg.sample_unit_ref, " \
                  "cg.status AS case_status, " \
                  "c.id " \
                  "FROM  " \
                  "casesvc.casegroup cg, casesvc.case c " \
                  "WHERE  " \
-                 "c.casegroupfk=cg.casegrouppk  " \
+                 "c.case_group_fk=cg.case_group_pk  " \
                  "AND  " \
-                 f"cg.collectionexerciseid = '{collection_exercise_id}' " \
+                 f"cg.collection_exercise_id = '{collection_exercise_id}' " \
                  "AND  " \
-                 f"cg.surveyid='{survey_id}' " \
+                 f"cg.survey_id='{survey_id}' " \
                  "ORDER BY  " \
-                 "cg.status, cg.sampleunitref),  " \
+                 "cg.status, cg.sample_unit_ref),  " \
                  "respondent_details AS " \
                  "(SELECT e.business_id AS business_party_uuid " \
                  "FROM  " \
@@ -133,17 +133,17 @@ def get_case_details(survey_id, collection_exercise_id, engine):
                  "WHERE " \
                  f"e.survey_id = '{survey_id}') " \
                  "SELECT " \
-                 "DISTINCT cd.id as caseId,  " \
-                 "bd.sampleunitref,  " \
+                 "DISTINCT cd.id as case_Id,  " \
+                 "bd.sample_unit_ref,  " \
                  "bd.business_name,  " \
                  "cd.case_status,  " \
                  "rd.business_party_uuid " \
                  "FROM " \
                  "case_details cd " \
-                 "LEFT JOIN business_details bd ON bd.sampleunitref=cd.sampleunitref " \
+                 "LEFT JOIN business_details bd ON bd.sample_unit_ref=cd.sample_unit_ref " \
                  "LEFT JOIN respondent_details rd ON bd.business_party_uuid = rd.business_party_uuid " \
                  "ORDER BY  " \
-                 "sampleunitref, case_status; "
+                 "sample_unit_ref, case_status; "
     try:
         case_details = engine.execute(text(case_query))
     except SQLAlchemyError:
