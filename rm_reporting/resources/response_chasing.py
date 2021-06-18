@@ -78,7 +78,7 @@ class ResponseChasingDownload(Resource):
                         "rd.telephone, rd.email_address, rd.respondent_status " \
                         "FROM " \
                         "case_details cd " \
-                        "LEFT JOIN business_details bd ON bd.sampleunitref=cd.sampleunitref " \
+                        "LEFT JOIN business_details bd ON bd.sample_unit_ref=cd.sample_unit_ref " \
                         "LEFT JOIN respondent_details rd ON bd.business_party_uuid = rd.business_party_uuid " \
                         "ORDER BY sample_unit_ref, case_status;"
         try:
