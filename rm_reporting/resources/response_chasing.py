@@ -59,7 +59,7 @@ class ResponseChasingDownload(Resource):
                         "ba.business_id = b.party_uuid), " \
                         "case_details AS " \
                         "(SELECT " \
-                        "cg.collectionexerciseid AS collection_exercise_uuid, cg.sample_unit_ref, " \
+                        "cg.collection_exercise_id AS collection_exercise_uuid, cg.sample_unit_ref, " \
                         "cg.status AS case_status " \
                         "FROM casesvc.casegroup cg " \
                         f"WHERE cg.collection_exercise_id = '{collection_exercise_id}' " \
