@@ -24,7 +24,7 @@ def get_report_figures(survey_id, collection_exercise_id, engine):
         'WHERE collection_exercise_id = :collection_exercise_id '
         'AND sample_unit_ref NOT LIKE \'1111%\'), '
         'survey_enrolments AS '
-        '(SELECT e.business_id, e.status '
+        '(SELECT DISTINCT(e.business_id), e.status '
         'FROM partysvc.enrolment e '
         'INNER JOIN partysvc.business_attributes ba ON e.business_id = ba.business_id '
         'WHERE survey_id = :survey_id '
