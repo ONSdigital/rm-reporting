@@ -15,14 +15,13 @@ testfixtures_warning = "inspect.getargspec()"
 
 
 class TestLoggerConfig(unittest.TestCase):
-
     @pytest.mark.filterwarnings(f"ignore:{testfixtures_warning}")
     @log_capture()
     def test_success(self, logs):
-        os.environ['JSON_INDENT_LOGGING'] = '1'
-        logger_initial_config(service_name='rm-reporting')
+        os.environ["JSON_INDENT_LOGGING"] = "1"
+        logger_initial_config(service_name="rm-reporting")
         logger = wrap_logger(logging.getLogger())
-        logger.error('Test')
+        logger.error("Test")
         message = logs.records[0].msg
 
         message_contents = '{\n "event": "Test",\n "severity": "error",\n "level": "error",\n "service": "rm-reporting"'
@@ -31,18 +30,18 @@ class TestLoggerConfig(unittest.TestCase):
     @pytest.mark.filterwarnings(f"ignore:{testfixtures_warning}")
     @log_capture()
     def test_indent_type_error(self, logs):
-        os.environ['JSON_INDENT_LOGGING'] = 'abc'
-        logger_initial_config(service_name='rm-reporting')
+        os.environ["JSON_INDENT_LOGGING"] = "abc"
+        logger_initial_config(service_name="rm-reporting")
         logger = wrap_logger(logging.getLogger())
-        logger.error('Test')
+        logger.error("Test")
         message = logs.records[0].msg
         self.assertIn('{"event": "Test", "severity": "error", "level": "error", "service": "rm-reporting"', message)
 
     @pytest.mark.filterwarnings(f"ignore:{testfixtures_warning}")
     @log_capture()
     def test_indent_value_error(self, logs):
-        logger_initial_config(service_name='rm-reporting')
+        logger_initial_config(service_name="rm-reporting")
         logger = wrap_logger(logging.getLogger())
-        logger.error('Test')
+        logger.error("Test")
         message = logs.records[0].msg
         self.assertIn('{"event": "Test", "severity": "error", "level": "error", "service": "rm-reporting"', message)
