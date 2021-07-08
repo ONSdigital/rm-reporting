@@ -22,7 +22,7 @@ def logger_initial_config(service_name=None, log_level=None, logger_format=None,
     except ValueError:
         indent = None
 
-    def add_service(logger, method_name, event_dict):  # pylint: disable=unused-argument
+    def add_service(logger, method_name, event_dict):
         """
         Add the service name to the event dict.
         """

@@ -88,15 +88,7 @@ class ResponseChasingDownload(Resource):
             raise
 
         for row in collex_details:
-            business = []
-            business.append(row[0])
-            business.append(row[1])
-            business.append(row[2])
-            business.append(row[3])
-            business.append(row[4])
-            business.append(row[5])
-            business.append(row[6])
-            business.append(row[7])
+            business = [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]]
             ws.append(business)
 
         wb.save(output)

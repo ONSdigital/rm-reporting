@@ -8,7 +8,7 @@ from rm_reporting.logger_config import logger_initial_config
 if not os.getenv("APP_SETTINGS"):
     os.environ["APP_SETTINGS"] = "DevelopmentConfig"
 
-from rm_reporting import app  # NOQA # pylint: disable=wrong-import-position
+from rm_reporting import app  # NOQA
 
 logger = wrap_logger(logging.getLogger(__name__))
 
