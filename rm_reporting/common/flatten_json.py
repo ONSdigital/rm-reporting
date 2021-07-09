@@ -8,14 +8,14 @@ def flatten_json(y):
     """
     out = {}
 
-    def flatten(x, name=''):
+    def flatten(x, name=""):
 
         # If the Nested key-value
         # pair is of dict type
         if type(x) is dict:
 
             for a in x:
-                flatten(x[a], name + a + '_')
+                flatten(x[a], name + a + "_")
 
         # If the Nested key-value
         # pair is of list type
@@ -24,7 +24,7 @@ def flatten_json(y):
             i = 0
 
             for a in x:
-                flatten(a, name + str(i) + '_')
+                flatten(a, name + str(i) + "_")
                 i += 1
         else:
             out[name[:-1]] = x
