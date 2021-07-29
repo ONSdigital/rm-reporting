@@ -71,7 +71,11 @@ def get_collection_exercise_and_survey(engine):
 
 
 def populate_json_record(
-    survey_id, case_details, survey_response_status, reporting_unit_respondent_information, engine
+    survey_id,
+    case_details,
+    survey_response_status,
+    reporting_unit_respondent_information,
+    engine,
 ):
     collection_cases = []
     reporting_units = []
@@ -159,9 +163,17 @@ def get_spp_report_data(engine):
     survey_id = collex_survey[0]
     collection_exercise_id = collex_survey[1]
     case_details = get_case_details(survey_id, collection_exercise_id, engine)
-    survey_response_status = {"surveyId": survey_id, "collectionExerciseId": collection_exercise_id}
+    survey_response_status = {
+        "surveyId": survey_id,
+        "collectionExerciseId": collection_exercise_id,
+    }
     reporting_unit_respondent_information = {"surveyId": survey_id}
-    return case_details, reporting_unit_respondent_information, survey_id, survey_response_status
+    return (
+        case_details,
+        reporting_unit_respondent_information,
+        survey_id,
+        survey_response_status,
+    )
 
 
 def upload_spp_files(reporting_unit_respondent_information, survey_response_status):
@@ -195,14 +207,16 @@ class SppSendReport(Resource):
         except IndexError:
             abort(404, "No collection exercise or survey ID")
         populate_json_record(
-            survey_id, case_details, survey_response_status, reporting_unit_respondent_information, engine
+            survey_id,
+            case_details,
+            survey_response_status,
+            reporting_unit_respondent_information,
+            engine,
         )
 
-        ccsi_file_name, rci_file_name = upload_spp_files(
-            reporting_unit_respondent_information, survey_response_status
-        )
+        ccsi_file_name, rci_file_name = upload_spp_files(reporting_unit_respondent_information, survey_response_status)
         return make_response(
             f"The SPP reporting process has completed. Files {ccsi_file_name} and {rci_file_name} "
-            "been uploaded to S3 successfully.",
+            "were uploaded to S3 successfully.",
             200,
         )
