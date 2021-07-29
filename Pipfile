@@ -6,7 +6,7 @@ name = "pypi"
 
 
 [packages]
-flask = "~=1.1"
+flask = "*"
 flask-cors = "*"
 flask-restx = "*"
 gunicorn = "*"
@@ -15,7 +15,7 @@ structlog = "*"
 openpyxl = "*"
 sqlalchemy = "==1.3.4"
 psycopg2-binary = "*"
-werkzeug = "~=0.16"
+werkzeug = "*"
 google-cloud-storage = "*"
 boto3 = "*"
 
