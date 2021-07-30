@@ -21,7 +21,7 @@ def get_respondents(business_party_id, survey_id, engine):
     respondent_details = get_respondent_details(business_party_id, engine, survey_id)
     for row in respondent_details:
         respondent = {
-            "id": row[0],
+            "id": row[6],
             "name": row[1],
             "telephone": row[2],
             "email": row[3],
@@ -39,7 +39,8 @@ def get_respondent_details(business_party_id, engine, survey_id):
         "r.telephone,  "
         "r.email_address,  "
         "r.status, "
-        "e.status  "
+        "e.status,  "
+        "r.party_uuid "
         "FROM  "
         "partysvc.enrolment e "
         "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id "
