@@ -64,7 +64,7 @@ class ResponseChasingDownload(Resource):
             f"WHERE cg.collection_exercise_id = '{collection_exercise_id}' "
             "ORDER BY cg.status, cg.sample_unit_ref), "
             "respondent_details AS "
-            "(SELECT e.survey_id AS survey_id, e.business_id AS business_party_uuid, "
+            "(SELECT e.survey_id AS survey_uuid, e.business_id AS business_party_uuid, "
             "e.status AS enrolment_status, "
             "CONCAT(r.first_name, ' ', r.last_name) AS respondent_name, r.telephone, "
             "r.email_address, r.status AS respondent_status "
