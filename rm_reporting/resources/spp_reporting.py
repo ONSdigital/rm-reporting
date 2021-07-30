@@ -61,7 +61,7 @@ def get_collection_exercise_and_survey(engine):
         "SELECT c.survey_id AS surveyId, c.id as collectionExerciseId "
         "FROM collectionexercise.collectionexercise c "
         "where survey_id = (select id from survey.survey where short_name = 'QBS') "
-        "AND statefk = 'LIVE' ORDER BY c.created DESC LIMIT 1"
+        "AND state_fk = 'LIVE' ORDER BY c.created DESC LIMIT 1"
     )
 
     collex_survey = engine.execute(collex_query).first()
