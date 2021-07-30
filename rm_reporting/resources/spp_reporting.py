@@ -58,9 +58,9 @@ def get_respondent_details(business_party_id, engine, survey_id):
 
 def get_collection_exercise_and_survey(engine):
     collex_query = text(
-        "SELECT c.survey_uuid AS surveyId, c.id as collectionExerciseId "
+        "SELECT c.survey_id AS surveyId, c.id as collectionExerciseId "
         "FROM collectionexercise.collectionexercise c "
-        "where survey_uuid = (select id from survey.survey where shortname = 'QBS') "
+        "where survey_id = (select id from survey.survey where shortname = 'QBS') "
         "AND statefk = 'LIVE' ORDER BY c.created DESC LIMIT 1"
     )
 
