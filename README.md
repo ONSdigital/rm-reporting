@@ -16,7 +16,7 @@ pipenv install
 ```
 you can also use the makefile to do this
 ```bash
-make install
+make build
 ```
 
 ## Running
@@ -36,4 +36,9 @@ To test the service is up:
 
 ```
 curl http://localhost:8084/info
+```
+
+## Local testing
+```bash
+make test
 ```

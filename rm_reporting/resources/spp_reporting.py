@@ -8,7 +8,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
 
 from rm_reporting import app, spp_reporting_api
-from rm_reporting.common.flatten_json import flatten_json
 from rm_reporting.common.gcs_gateway import GoogleCloudStorageGateway
 from rm_reporting.common.s3_gateway import SimpleStorageServiceGateway
 
@@ -35,12 +34,13 @@ def get_respondents(business_party_id, survey_id, engine):
 
 def get_respondent_details(business_party_id, engine, survey_id):
     respondent_query = (
-        "SELECT r.id, "
+        "SELECT r.party_uuid, "
         "CONCAT(r.first_name, ' ', r.last_name) AS respondent_name, "
         "r.telephone,  "
         "r.email_address,  "
         "r.status, "
-        "e.status  "
+        "e.status,  "
+        "r.id "
         "FROM  "
         "partysvc.enrolment e "
         "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id "
@@ -59,10 +59,10 @@ def get_respondent_details(business_party_id, engine, survey_id):
 
 def get_collection_exercise_and_survey(engine):
     collex_query = text(
-        "SELECT c.survey_uuid AS surveyId, c.id as collectionExerciseId "
+        "SELECT c.survey_id AS surveyId, c.id as collectionExerciseId "
         "FROM collectionexercise.collectionexercise c "
-        "where survey_uuid = (select id from survey.survey where shortname = 'RSI') "
-        "AND statefk = 'LIVE' ORDER BY c.created DESC LIMIT 1"
+        "where survey_id = (select id from survey.survey where short_name = 'RSI') "
+        "AND state_fk = 'LIVE' ORDER BY c.created DESC LIMIT 1"
     )
 
     collex_survey = engine.execute(collex_query).first()
@@ -72,7 +72,11 @@ def get_collection_exercise_and_survey(engine):
 
 
 def populate_json_record(
-    survey_id, case_details, survey_response_status, reporting_unit_respondent_information, engine
+    survey_id,
+    case_details,
+    survey_response_status,
+    reporting_unit_respondent_information,
+    engine,
 ):
     collection_cases = []
     reporting_units = []
@@ -160,9 +164,17 @@ def get_spp_report_data(engine):
     survey_id = collex_survey[0]
     collection_exercise_id = collex_survey[1]
     case_details = get_case_details(survey_id, collection_exercise_id, engine)
-    survey_response_status = {"surveyId": survey_id, "collectionExerciseId": collection_exercise_id}
+    survey_response_status = {
+        "surveyId": survey_id,
+        "collectionExerciseId": collection_exercise_id,
+    }
     reporting_unit_respondent_information = {"surveyId": survey_id}
-    return case_details, reporting_unit_respondent_information, survey_id, survey_response_status
+    return (
+        case_details,
+        reporting_unit_respondent_information,
+        survey_id,
+        survey_response_status,
+    )
 
 
 def upload_spp_files(reporting_unit_respondent_information, survey_response_status):
@@ -196,14 +208,16 @@ class SppSendReport(Resource):
         except IndexError:
             abort(404, "No collection exercise or survey ID")
         populate_json_record(
-            survey_id, case_details, survey_response_status, reporting_unit_respondent_information, engine
+            survey_id,
+            case_details,
+            survey_response_status,
+            reporting_unit_respondent_information,
+            engine,
         )
 
-        ccsi_file_name, rci_file_name = upload_spp_files(
-            flatten_json(reporting_unit_respondent_information), flatten_json(survey_response_status)
-        )
+        ccsi_file_name, rci_file_name = upload_spp_files(reporting_unit_respondent_information, survey_response_status)
         return make_response(
             f"The SPP reporting process has completed. Files {ccsi_file_name} and {rci_file_name} "
-            "been uploaded to S3 successfully.",
+            "were uploaded to S3 successfully.",
             200,
         )
