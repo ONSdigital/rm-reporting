@@ -17,11 +17,12 @@ class SimpleStorageServiceGateway:
         self.s3 = boto3.client("s3", aws_access_key_id=self.access, aws_secret_access_key=self.secret)
 
     def _upload_json_file_to_aws(self, file_name, file):
-        logger.info("uploading file to aws", file_name=file_name)
+        file_path = f"sdc-contacts/{file_name}"
+        logger.info("uploading file to aws", file_path=file_path)
         self.s3.put_object(
-            Body=json.dumps(file, cls=UUIDEncoder), Bucket=self.bucket, Key=file_name, ContentType="application/json"
+            Body=json.dumps(file, cls=UUIDEncoder), Bucket=self.bucket, Key=file_path, ContentType="application/json"
         )
-        logger.info("file successfully uploaded to AWS", file_name=f"sdc-contacts/{file_name}")
+        logger.info("file successfully uploaded to AWS", file_path=file_path)
 
     def upload_spp_file(self, file_name, file):
         self._upload_json_file_to_aws(file_name, file)
