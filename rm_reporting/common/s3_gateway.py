@@ -21,7 +21,7 @@ class SimpleStorageServiceGateway:
         self.s3.put_object(
             Body=json.dumps(file, cls=UUIDEncoder), Bucket=self.bucket, Key=file_name, ContentType="application/json"
         )
-        logger.info("file successfully uploaded to AWS", file_name=file_name)
+        logger.info("file successfully uploaded to AWS", file_name=f"sdc-contacts/{file_name}")
 
     def upload_spp_file(self, file_name, file):
         self._upload_json_file_to_aws(file_name, file)
