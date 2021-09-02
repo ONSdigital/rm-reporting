@@ -143,6 +143,8 @@ spec:
             value: "{{ .Values.gcp.project }}"
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/credentials.json
+          - name: GCS_ENABLED
+            value: "{{ .Values.gcp.bucket.enabled }}"
           - name: GCS_BUCKET_NAME
             value: "{{ .Values.gcp.bucket.name }}"
           - name: GCS_BUCKET_PREFIX
