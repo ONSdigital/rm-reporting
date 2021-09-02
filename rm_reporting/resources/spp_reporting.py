@@ -182,8 +182,9 @@ def upload_spp_files(reporting_unit_respondent_information, survey_response_stat
     ccsi_file_name = "CCSI" + day + ".json"
     rci_file_name = "RCI" + day + ".json"
     gcs = GoogleCloudStorageGateway(app.config)
-    gcs.upload_spp_file_to_gcs(file_name=ccsi_file_name, file=survey_response_status)
-    gcs.upload_spp_file_to_gcs(file_name=rci_file_name, file=reporting_unit_respondent_information)
+    if app.config["GCS_ENABLED"] == "true":
+        gcs.upload_spp_file_to_gcs(file_name=ccsi_file_name, file=survey_response_status)
+        gcs.upload_spp_file_to_gcs(file_name=rci_file_name, file=reporting_unit_respondent_information)
     if app.config["AWS_ENABLED"] == "true":
         s3 = SimpleStorageServiceGateway(app.config)
         s3.upload_spp_file(file_name=ccsi_file_name, file=survey_response_status)

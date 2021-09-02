@@ -48,6 +48,7 @@ gcp:
   bucket:
     name: "ras-rm-spp-report-dev"
     prefix: ""
+    enabled: true
 
 aws:
   enabled: false
