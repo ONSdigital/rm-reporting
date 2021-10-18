@@ -26,7 +26,7 @@ flake8 = "*"
 isort = "*"
 testfixtures = "*"
 pytest-cov = "*"
-coverage= "==6.0b1"
+coverage= "*"
 
 
 [requires]
