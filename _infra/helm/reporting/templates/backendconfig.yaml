@@ -1,0 +1,12 @@
+{{- if .Values.publicIP }}
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: rops-backend-config
+spec:
+  securityPolicy:
+    name: "ras-cloud-armor-policy"
+  sessionAffinity:
+    affinityType: CLIENT_IP
+  timeoutSec: {{ .Values.ingress.timeoutSec }}
+{{- end }}

@@ -155,6 +155,20 @@ spec:
           - name: S3_BUCKET
             value: "{{ .Values.aws.bucket }}"
           {{- end }}
+          - name: REPORTING_URL
+            {{- if .Values.ingress.enabled }}
+            value: "https://{{ .Values.ingress.gcpHost }}"
+            {{- else }}
+            value: "http://localhost:{{.Values.service.port}}"
+            {{- end }}
+          - name: DASHBOARD_URL
+            {{- if .Values.dashboard.hasIngress }}
+            value: {{ .Values.dashboard.address }}
+            {{- else if .Values.dns.enabled }}
+            value: "http://responses-dashboard.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.dns.wellKnownPort }}"
+            {{- else }}
+            value: "http://$(RESPONSES_DASHBOARD_SERVICE_HOST):$(RESPONSES_DASHBOARD_SERVICE_PORT)"
+            {{- end }}
           {{- if .Values.aws.enabled }}
           - name: S3_ACCESS_KEY
             valueFrom:
