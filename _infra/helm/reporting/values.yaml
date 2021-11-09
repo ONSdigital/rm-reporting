@@ -52,3 +52,13 @@ gcp:
 
 aws:
   enabled: false
+
+ingress:
+  enabled: false
+  timeoutSec: 60
+  gcpHost: reporting-gcp.example.com
+  gcpCertName: reporting-gcp-cert
+
+dns:
+  enabled: false
+  wellKnownPort: 8080
