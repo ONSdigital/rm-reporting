@@ -9,7 +9,6 @@ image:
 container:
   port: 8080
 service:
-  type: ClusterIP
   port: 8080
 
 resources:
@@ -53,13 +52,3 @@ gcp:
 
 aws:
   enabled: false
-
-ingress:
-  enabled: false
-  timeoutSec: 60
-  gcpHost: reporting-gcp.example.com
-  gcpCertName: reporting-gcp-cert
-
-dns:
-  enabled: false
-  wellKnownPort: 8080
