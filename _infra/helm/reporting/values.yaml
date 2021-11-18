@@ -62,7 +62,3 @@ ingress:
 dashboard:
   hasIngress: false
   address: https://dashboard.example.com
-
-dns:
-  enabled: false
-  wellKnownPort: 8080
