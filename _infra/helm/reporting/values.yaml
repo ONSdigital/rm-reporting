@@ -52,13 +52,3 @@ gcp:
 
 aws:
   enabled: false
-
-ingress:
-  enabled: false
-  timeoutSec: 60
-  gcpHost: reporting-gcp.example.com
-  gcpCertName: reporting-gcp-cert
-
-dashboard:
-  hasIngress: false
-  address: https://dashboard.example.com
