@@ -9,7 +9,6 @@ image:
 container:
   port: 8080
 service:
-  type: ClusterIP
   port: 8080
 
 resources:
