@@ -59,6 +59,10 @@ ingress:
   gcpHost: reporting-gcp.example.com
   gcpCertName: reporting-gcp-cert
 
+dashboard:
+  hasIngress: false
+  address: https://dashboard.example.com
+
 dns:
   enabled: false
   wellKnownPort: 8080

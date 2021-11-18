@@ -2,7 +2,7 @@
 apiVersion: cloud.google.com/v1
 kind: BackendConfig
 metadata:
-  name: reporting-backend-config
+  name: rops-backend-config
 spec:
   securityPolicy:
     name: "ras-cloud-armor-policy"
