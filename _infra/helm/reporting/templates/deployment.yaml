@@ -172,4 +172,4 @@ spec:
                 key: spp-aws-secret
           {{- end }}
           resources:
-            {{ toYaml .Values.application.resources | nindent 12 }}
+            {{ toYaml .Values.resources.application | nindent 12 }}
