@@ -18,6 +18,14 @@ resources:
   limits:
     cpu: "26m"
     memory: "350Mi"
+  proxy:
+    requests:
+      memory: "25Mi"
+      cpu: "5m"
+    limits:
+      cpu: "100m"
+      memory: "256Mi"
+
 
 autoscaling: false
 scaleAt:
