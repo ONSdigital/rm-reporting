@@ -17,7 +17,7 @@ resources:
       memory: "125Mi"
       cpu: "50m"
     limits:
-      cpu: "150m"
+      cpu: "200m"
       memory: "350Mi"
   proxy:
     requests:
