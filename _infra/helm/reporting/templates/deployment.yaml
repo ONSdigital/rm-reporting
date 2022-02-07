@@ -137,9 +137,9 @@ spec:
             value: "{{ .Values.container.port }}"
           - name: DATABASE_URI
             {{- if .Values.database.sqlProxyEnabled }}
-            value: "postgres://$(DB_USERNAME):$(DB_PASSWORD)@127.0.0.1:$(DB_PORT)/$(DB_NAME)"
+            value: "postgresql://$(DB_USERNAME):$(DB_PASSWORD)@127.0.0.1:$(DB_PORT)/$(DB_NAME)"
             {{- else }}
-            value: "postgres://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+            value: "postgresql://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
             {{- end }}
           - name: GOOGLE_CLOUD_PROJECT
             value: "{{ .Values.gcp.project }}"
