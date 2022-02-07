@@ -8,9 +8,9 @@ class TestResponseDashboard(TestCase):
     def setUp(self):
         self.test_client = app.test_client()
 
-    @mock.patch("rm_reporting.app.db.engine")
-    def test_dashboard_report_success(self, mock_engine):
-        mock_engine.execute.return_value.first.return_value = {
+    @mock.patch("rm_reporting.app.db")
+    def test_dashboard_report_success(self, mock_db):
+        mock_db.engine.execute.return_value.first.return_value = {
             "Sample Size": 100,
             "Total Enrolled": 50,
             "Total Pending": 10,
@@ -32,9 +32,9 @@ class TestResponseDashboard(TestCase):
         self.assertEqual(20, response_dict["report"]["inProgress"])
         self.assertEqual(70, response_dict["report"]["notStarted"])
 
-    @mock.patch("rm_reporting.app.db.engine")
-    def test_dashboard_report_invalid_id(self, mock_engine):
-        mock_engine.execute.return_value.first.return_value = {
+    @mock.patch("rm_reporting.app.db")
+    def test_dashboard_report_invalid_id(self, mock_db):
+        mock_db.engine.execute.return_value.first.return_value = {
             "Sample Size": 100,
             "Total Enrolled": 50,
             "Total Pending": 10,

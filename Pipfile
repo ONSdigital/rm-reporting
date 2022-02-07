@@ -13,7 +13,7 @@ gunicorn = "*"
 gevent = {version = "*", platform_python_implementation="=='CPython'"}
 structlog = "*"
 openpyxl = "*"
-sqlalchemy = "==1.3.4"
+sqlalchemy = "*"
 psycopg2-binary = "*"
 werkzeug = "*"
 google-cloud-storage = "*"
