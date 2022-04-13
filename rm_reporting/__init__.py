@@ -43,16 +43,13 @@ api = Api(title="rm-reporting", default="info", default_label="")
 
 response_chasing_api = Namespace("response-chasing", path="/reporting-api/v1/response-chasing")
 response_dashboard_api = Namespace("response-dashboard", path="/reporting-api/v1/response-dashboard")
-spp_reporting_api = Namespace("spp-reporting", path="/spp-reporting-api/v1/spp-reporting")
 
 api.add_namespace(response_chasing_api)
 api.add_namespace(response_dashboard_api)
-api.add_namespace(spp_reporting_api)
 
 from rm_reporting.resources.info import Info  # NOQA
 from rm_reporting.resources.response_chasing import ResponseChasingDownload  # NOQA
 from rm_reporting.resources.response_chasing import SocialMIDownload  # NOQA
 from rm_reporting.resources.responses_dashboard import ResponseDashboard  # NOQA
-from rm_reporting.resources.spp_reporting import SppSendReport  # NOQA
 
 api.init_app(app)
