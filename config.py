@@ -13,6 +13,10 @@ class Config(object):
     DATABASE_URI = os.getenv("DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/ras")
     GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
 
+    CASE_URL = os.getenv("CASE_URL")
+    COLLECTION_EXERCISE_URL = os.getenv("COLLECTION_EXERCISE_URL")
+    PARTY_URL = os.getenv("PARTY_URL")
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

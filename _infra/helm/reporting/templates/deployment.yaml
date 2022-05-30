@@ -135,6 +135,24 @@ spec:
                 key: security-password
           - name: PORT
             value: "{{ .Values.container.port }}"
+          - name: CASE_URL
+            {{- if .Values.dns.enabled }}
+            value: "http://case.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.dns.wellKnownPort }}"
+            {{- else }}
+            value: "http://$(CASE_SERVICE_HOST):$(CASE_SERVICE_PORT)"
+            {{- end }}
+          - name: COLLECTION_EXERCISE_URL
+            {{- if .Values.dns.enabled }}
+            value: "http://collection-exercise.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.dns.wellKnownPort }}"
+            {{- else }}
+            value: "http://$(COLLECTION_EXERCISE_SERVICE_HOST):$(COLLECTION_EXERCISE_SERVICE_PORT)"
+            {{- end }}
+          - name: PARTY_URL
+            {{- if .Values.dns.enabled }}
+            value: "http://party.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.dns.wellKnownPort }}"
+            {{- else }}
+            value: "http://$(PARTY_SERVICE_HOST):$(PARTY_SERVICE_PORT)"
+            {{- end }}
           - name: DATABASE_URI
             {{- if .Values.database.sqlProxyEnabled }}
             value: "postgresql://$(DB_USERNAME):$(DB_PASSWORD)@127.0.0.1:$(DB_PORT)/$(DB_NAME)"

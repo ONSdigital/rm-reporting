@@ -1,4 +1,5 @@
 env: minikube
+namespace: minikube
 
 image:
   devRepo: eu.gcr.io/ons-rasrmbs-management

@@ -41,6 +41,13 @@ class ResponseChasingDownload(Resource):
             ws[cell] = header
             ws.column_dimensions[cell[0]].width = len(header)
 
+        # Get cases by collection exercise id (doesn't exist somehow...)
+        # get /businesses/id/<business_id>/attributes?collection_exercise_id=collex_id
+        # These 2 get you the first 3 fields.
+        #    reporting_unit = party_controller.get_business_by_ru_ref(ru_ref)
+        # Get all respondents for the given ru
+        # respondent_party_ids = [respondent["partyId"] for respondent in reporting_unit.get("associations")]
+        # respondents = party_controller.get_respondent_by_party_ids(respondent_party_ids)
         engine = app.db.engine
 
         collex_status = (
