@@ -44,22 +44,22 @@ class ResponseChasingDownload(Resource):
 
         engine = app.db.engine
 
-        case_status = (
-            "SELECT "
-            "sample_unit_ref, status"
-            " FROM casesvc.casegroup cg"
+        all_cases_for_collection_exercise_sql = (
+            "SELECT sample_unit_ref, status FROM casesvc.casegroup cg"
             f" WHERE collection_exercise_id = '{collection_exercise_id}' "
             "ORDER BY status, sample_unit_ref"
         )
 
         try:
-            case_status = engine.execute(text(case_status))
+            result = engine.execute(text(all_cases_for_collection_exercise_sql))
         except SQLAlchemyError:
             logger.exception("SQL Alchemy query failed")
             raise
 
-        for row in case_status:
-            reporting_unit = party_controller.get_business_by_ru_ref(row[0])
+        for row in result:
+            sample_unit_ref = row[0]
+            case_status = row[1]
+            reporting_unit = party_controller.get_business_by_ru_ref(sample_unit_ref)
             # Get all respondents for the given ru
             respondent_party_ids = [respondent["partyId"] for respondent in reporting_unit.get("associations")]
             respondents = party_controller.get_respondent_by_party_ids(respondent_party_ids)
@@ -70,13 +70,15 @@ class ResponseChasingDownload(Resource):
 
             for respondent in respondents:
                 try:
-                    ru_status = next(item for item in respondent.get("associations") if item["sampleUnitRef"] == row[0])
+                    ru_status = next(
+                        item for item in respondent.get("associations") if item["sampleUnitRef"] == sample_unit_ref
+                    )
                     enrolment_status = next(
                         item for item in ru_status.get("enrolments") if item.get("surveyId") == survey_id
                     )
                     business = [
-                        row[1],
-                        row[0],
+                        case_status,
+                        sample_unit_ref,
                         reporting_unit.get("name"),
                         enrolment_status.get("enrolmentStatus"),
                         respondent.get("firstName"),
