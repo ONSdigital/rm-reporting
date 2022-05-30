@@ -64,16 +64,24 @@ class ResponseChasingDownload(Resource):
             respondent_party_ids = [respondent["partyId"] for respondent in reporting_unit.get("associations")]
             respondents = party_controller.get_respondent_by_party_ids(respondent_party_ids)
             if len(respondents) == 0:
-                business = [row[1], row[0], reporting_unit.get('name'), None, None, None, None, None]
+                business = [row[1], row[0], reporting_unit.get("name"), None, None, None, None, None]
                 ws.append(business)
                 continue
-            respondent = respondents[0]
 
-            ru_status = next(item for item in respondent.get('associations') if item["sampleUnitRef"] == row[0])
-            enrolment_status = next(item for item in ru_status.get('enrolments') if item["surveyId"] == survey_id)
-            business = [row[1], row[0], reporting_unit.get('name'), enrolment_status.get('enrolmentStatus'), respondent.get('firstName'),
-                        respondent.get('telephone'), respondent.get('emailAddress'), respondent.get('status')]
-            ws.append(business)
+            for respondent in respondents:
+                ru_status = next(item for item in respondent.get("associations") if item["sampleUnitRef"] == row[0])
+                enrolment_status = next(item for item in ru_status.get("enrolments") if item["surveyId"] == survey_id)
+                business = [
+                    row[1],
+                    row[0],
+                    reporting_unit.get("name"),
+                    enrolment_status.get("enrolmentStatus"),
+                    respondent.get("firstName"),
+                    respondent.get("telephone"),
+                    respondent.get("emailAddress"),
+                    respondent.get("status"),
+                ]
+                ws.append(business)
 
         wb.active = 1
         wb.save(output)
