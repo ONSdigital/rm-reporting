@@ -70,7 +70,9 @@ class ResponseChasingDownload(Resource):
 
             for respondent in respondents:
                 ru_status = next(item for item in respondent.get("associations") if item["sampleUnitRef"] == row[0])
-                enrolment_status = next(item for item in ru_status.get("enrolments") if item["surveyId"] == survey_id)
+                enrolment_status = next(
+                    item for item in ru_status.get("enrolments") if item.get("surveyId") == survey_id
+                )
                 business = [
                     row[1],
                     row[0],
