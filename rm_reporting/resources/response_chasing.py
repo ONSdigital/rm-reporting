@@ -11,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
 
 from rm_reporting import app, response_chasing_api
+from rm_reporting.controllers import party_controller
 
 logger = wrap_logger(logging.getLogger(__name__))
 
@@ -41,61 +42,37 @@ class ResponseChasingDownload(Resource):
             ws[cell] = header
             ws.column_dimensions[cell[0]].width = len(header)
 
-        # Get cases by collection exercise id (doesn't exist somehow...)
-        # get /businesses/id/<business_id>/attributes?collection_exercise_id=collex_id
-        # These 2 get you the first 3 fields.
-        #    reporting_unit = party_controller.get_business_by_ru_ref(ru_ref)
-        # Get all respondents for the given ru
-        # respondent_party_ids = [respondent["partyId"] for respondent in reporting_unit.get("associations")]
-        # respondents = party_controller.get_respondent_by_party_ids(respondent_party_ids)
         engine = app.db.engine
 
-        collex_status = (
-            "WITH "
-            "business_details AS "
-            "(SELECT DISTINCT "
-            "ba.collection_exercise As collection_exercise_uuid, "
-            "b.business_ref AS sample_unit_ref, "
-            "ba.business_id AS business_party_uuid, "
-            "ba.attributes->> 'name' AS business_name "
-            "FROM "
-            "partysvc.business_attributes ba, partysvc.business b "
-            "WHERE "
-            f"ba.collection_exercise = '{collection_exercise_id}' and "
-            "ba.business_id = b.party_uuid), "
-            "case_details AS "
-            "(SELECT "
-            "cg.collection_exercise_id AS collection_exercise_uuid, cg.sample_unit_ref, "
-            "cg.status AS case_status "
-            "FROM casesvc.casegroup cg "
-            f"WHERE cg.collection_exercise_id = '{collection_exercise_id}' "
-            "ORDER BY cg.status, cg.sample_unit_ref), "
-            "respondent_details AS "
-            "(SELECT e.survey_id AS survey_uuid, e.business_id AS business_party_uuid, "
-            "e.status AS enrolment_status, "
-            "CONCAT(r.first_name, ' ', r.last_name) AS respondent_name, r.telephone, "
-            "r.email_address, r.status AS respondent_status "
-            "FROM partysvc.enrolment e "
-            "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id "
-            "WHERE "
-            f"e.survey_id = '{survey_id}') "
-            "SELECT cd.case_status, bd.sample_unit_ref, bd.business_name, "
-            "rd.enrolment_status, rd.respondent_name, "
-            "rd.telephone, rd.email_address, rd.respondent_status "
-            "FROM "
-            "case_details cd "
-            "LEFT JOIN business_details bd ON bd.sample_unit_ref=cd.sample_unit_ref "
-            "LEFT JOIN respondent_details rd ON bd.business_party_uuid = rd.business_party_uuid "
-            "ORDER BY sample_unit_ref, case_status;"
+        case_status = (
+            "SELECT "
+            "sample_unit_ref, status"
+            " FROM casesvc.casegroup cg"
+            f" WHERE collection_exercise_id = '{collection_exercise_id}' "
+            "ORDER BY status, sample_unit_ref"
         )
+
         try:
-            collex_details = engine.execute(text(collex_status))
+            case_status = engine.execute(text(case_status))
         except SQLAlchemyError:
             logger.exception("SQL Alchemy query failed")
             raise
 
-        for row in collex_details:
-            business = [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]]
+        for row in case_status:
+            reporting_unit = party_controller.get_business_by_ru_ref(row[0])
+            # Get all respondents for the given ru
+            respondent_party_ids = [respondent["partyId"] for respondent in reporting_unit.get("associations")]
+            respondents = party_controller.get_respondent_by_party_ids(respondent_party_ids)
+            if len(respondents) == 0:
+                business = [row[1], row[0], reporting_unit.get('name'), None, None, None, None, None]
+                ws.append(business)
+                continue
+            respondent = respondents[0]
+
+            ru_status = next(item for item in respondent.get('associations') if item["sampleUnitRef"] == row[0])
+            enrolment_status = next(item for item in ru_status.get('enrolments') if item["surveyId"] == survey_id)
+            business = [row[1], row[0], reporting_unit.get('name'), enrolment_status.get('enrolmentStatus'), respondent.get('firstName'),
+                        respondent.get('telephone'), respondent.get('emailAddress'), respondent.get('status')]
             ws.append(business)
 
         wb.active = 1

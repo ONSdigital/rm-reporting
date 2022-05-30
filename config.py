@@ -13,17 +13,17 @@ class Config(object):
     DATABASE_URI = os.getenv("DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/ras")
     GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
 
-    CASE_URL = os.getenv("CASE_URL")
-    COLLECTION_EXERCISE_URL = os.getenv("COLLECTION_EXERCISE_URL")
     PARTY_URL = os.getenv("PARTY_URL")
 
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "DEBUG")
+    LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
     SECURITY_USER_NAME = os.getenv("SECURITY_USER_NAME", "admin")
     SECURITY_USER_PASSWORD = os.getenv("SECURITY_USER_PASSWORD", "secret")
     BASIC_AUTH = (SECURITY_USER_NAME, SECURITY_USER_PASSWORD)
+
+    PARTY_URL = os.getenv("PARTY_URL", "http://localhost:8081")
 
 
 class TestingConfig(DevelopmentConfig):
