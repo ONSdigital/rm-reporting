@@ -69,21 +69,25 @@ class ResponseChasingDownload(Resource):
                 continue
 
             for respondent in respondents:
-                ru_status = next(item for item in respondent.get("associations") if item["sampleUnitRef"] == row[0])
-                enrolment_status = next(
-                    item for item in ru_status.get("enrolments") if item.get("surveyId") == survey_id
-                )
-                business = [
-                    row[1],
-                    row[0],
-                    reporting_unit.get("name"),
-                    enrolment_status.get("enrolmentStatus"),
-                    respondent.get("firstName"),
-                    respondent.get("telephone"),
-                    respondent.get("emailAddress"),
-                    respondent.get("status"),
-                ]
-                ws.append(business)
+                try:
+                    ru_status = next(item for item in respondent.get("associations") if item["sampleUnitRef"] == row[0])
+                    enrolment_status = next(
+                        item for item in ru_status.get("enrolments") if item.get("surveyId") == survey_id
+                    )
+                    business = [
+                        row[1],
+                        row[0],
+                        reporting_unit.get("name"),
+                        enrolment_status.get("enrolmentStatus"),
+                        respondent.get("firstName"),
+                        respondent.get("telephone"),
+                        respondent.get("emailAddress"),
+                        respondent.get("status"),
+                    ]
+                    ws.append(business)
+                except Exception:
+                    logger.error(respondent, exc_info=True)
+                    raise
 
         wb.active = 1
         wb.save(output)
