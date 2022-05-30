@@ -33,7 +33,7 @@ autoscaling: false
 scaleAt:
   # These are expressed as a percentage of resources.requests, not resources.limits
   memoryPercentage: 150
-  cpuPercentage: 250
+  cpuPercentage: 150
 replicas: 1
 rollingUpdate:
   maxSurge: 1

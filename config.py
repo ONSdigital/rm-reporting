@@ -18,7 +18,7 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+    LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "DEBUG")
     SECURITY_USER_NAME = os.getenv("SECURITY_USER_NAME", "admin")
     SECURITY_USER_PASSWORD = os.getenv("SECURITY_USER_PASSWORD", "secret")
     BASIC_AUTH = (SECURITY_USER_NAME, SECURITY_USER_PASSWORD)
