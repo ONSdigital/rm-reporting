@@ -46,3 +46,7 @@ database:
     usernameKey: username
     passwordKey: password
     nameKey: db-name
+
+dns:
+  enabled: false
+  wellKnownPort: 8080
