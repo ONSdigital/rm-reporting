@@ -22,7 +22,6 @@ jobs:
         with:
           project_id: ${{ secrets.GOOGLE_PROJECT_ID }}
           export_default_credentials: true
-      - uses: onsdigital/ras-rm-spinnaker-action@main
           
       - uses: onsdigital/ras-rm-spinnaker-action@main
         with:
