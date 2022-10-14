@@ -45,3 +45,9 @@ database:
     usernameKey: username
     passwordKey: password
     nameKey: db-name
+    caseUserNameKey: username
+    casePasswordKey: password
+    caseNameKey: db-name
+    partyUserNameKey: username
+    partyPasswordKey: password
+    partyNameKey: db-name

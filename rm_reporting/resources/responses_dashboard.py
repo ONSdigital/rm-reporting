@@ -14,6 +14,17 @@ logger = wrap_logger(logging.getLogger(__name__))
 
 
 def get_report_figures(survey_id, collection_exercise_id, engine):
+    result_dict = {
+        "inProgress": "0",
+        "accountsPending": "0",
+        "accountsEnrolled": "0",
+        "notStarted": "0",
+        "completed": "0",
+        "sampleSize": "0",
+    }
+    case_engine = app.db.get_engine(app, "case_db")
+    party_engine = app.db.engine(app, "survey_db")
+    # Get all cases for a collection exercise
     case_query = text(
         "WITH "
         "case_figures AS "
@@ -24,6 +35,20 @@ def get_report_figures(survey_id, collection_exercise_id, engine):
         "FROM casesvc.casegroup "
         "WHERE collection_exercise_id = :collection_exercise_id "
         "AND sample_unit_ref NOT LIKE '1111%'), "
+    )
+
+    case_result = case_engine.execute(
+        case_query, survey_id=survey_id, collection_exercise_id=collection_exercise_id
+    ).all()
+
+    result_dict["sampleSize"] = len(case_result)
+    logger.info(case_result)
+    # Should we filter out the 1111* ones?  Maybe we get them in the initial search then filter them out and do some
+    # logging saying 'filtered out x number of test reporting units to make it obvious'
+
+    # Need to get all business parties related to the cases
+
+    party_query = text(
         "business_details AS "
         "(SELECT DISTINCT "
         "b.business_ref AS sample_unit_ref, "
@@ -34,6 +59,11 @@ def get_report_figures(survey_id, collection_exercise_id, engine):
         "ba.collection_exercise = :collection_exercise_id and "
         "ba.business_id = b.party_uuid and "
         "b.business_ref NOT LIKE '1111%'), "
+    )
+    party_result = party_engine.execute(party_query, survey_id=survey_id, collection_exercise_id=collection_exercise_id)
+    logger.info(party_result)
+
+    extra_query = text(
         "case_details AS "
         "(select sample_unit_ref "
         "FROM casesvc.casegroup "
@@ -59,7 +89,9 @@ def get_report_figures(survey_id, collection_exercise_id, engine):
         "FROM survey_enrolments) "
         "SELECT * FROM case_figures, party_figures"
     )
+    logger.info(extra_query)
 
+    logger.info(party_query)
     report_figures = engine.execute(
         case_query, survey_id=survey_id, collection_exercise_id=collection_exercise_id
     ).first()

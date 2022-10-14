@@ -39,7 +39,7 @@ spec:
         - name: cloudsql-proxy
           image: gcr.io/cloudsql-docker/gce-proxy:1.32.0
           command: ["/cloud_sql_proxy",
-                    "-instances=$(SQL_INSTANCE_NAME)=tcp:$(DB_PORT)",
+                    "-instances=$(READ_REPLICA_INSTANCE_NAME)=tcp:$(DB_PORT)",
                     "-ip_address_types=PRIVATE",
                     "-credential_file=/secrets/cloudsql/credentials.json"]
           securityContext:
@@ -50,11 +50,11 @@ spec:
               mountPath: /secrets/cloudsql
               readOnly: true
           env:
-          - name: SQL_INSTANCE_NAME
+          - name: READ_REPLICA_INSTANCE_NAME
             valueFrom:
               configMapKeyRef:
                 name: cloudsql-proxy-config
-                key: reporting-connection-name
+                key: replica-connection-name
           - name: DB_PORT
             valueFrom:
               secretKeyRef:
@@ -141,6 +141,36 @@ spec:
             {{- else }}
             value: "postgresql://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
             {{- end }}
+          - name: CASE_DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: db-config
+                key: {{ .Values.database.secrets.caseNameKey }}
+          - name: CASE_DB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: {{ .Values.database.secrets.caseUserNameKey }}
+          - name: CASE_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: {{ .Values.database.secrets.casePasswordKey }}
+          - name: PARTY_DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: db-config
+                key: {{ .Values.database.secrets.partyNameKey }}
+          - name: PARTY_DB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: {{ .Values.database.secrets.partyUserNameKey }}
+          - name: PARTY_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: {{ .Values.database.secrets.partyPasswordKey }}
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/credentials.json
           resources:

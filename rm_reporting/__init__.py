@@ -29,6 +29,8 @@ app = Flask(__name__)
 
 app_config = f"config.{os.environ.get('APP_SETTINGS', 'Config')}"
 app.config.from_object(app_config)
+# supports multiple db connections
+app.config["SQLALCHEMY_BINDS"] = app.config["DATABASE_BINDS"]
 
 app.url_map.strict_slashes = False
 
