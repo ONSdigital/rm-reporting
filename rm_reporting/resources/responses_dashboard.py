@@ -13,114 +13,93 @@ from rm_reporting.exceptions import NoDataException
 logger = wrap_logger(logging.getLogger(__name__))
 
 
-def get_report_figures(survey_id, collection_exercise_id, engine):
+def get_report_figures(survey_id, collection_exercise_id):
     result_dict = {
-        "inProgress": "0",
-        "accountsPending": "0",
-        "accountsEnrolled": "0",
-        "notStarted": "0",
-        "completed": "0",
-        "sampleSize": "0",
+        "inProgress": 0,
+        "accountsPending": 0,
+        "accountsEnrolled": 0,
+        "notStarted": 0,
+        "completed": 0,
+        "sampleSize": 0,
     }
-    case_engine = app.db.get_engine(app, "case_db")
-    party_engine = app.db.engine(app, "survey_db")
+    case_engine = app.case_db.engine
+    party_engine = app.party_db.engine
     # Get all cases for a collection exercise
     case_query = text(
-        "WITH "
-        "case_figures AS "
-        '(SELECT COUNT(*) AS "Sample Size", '
+        'SELECT COUNT(*) AS "Sample Size", '
         "COUNT(CASE WHEN status = 'NOTSTARTED' THEN 1 ELSE NULL END) AS \"Not Started\", "
         "COUNT(CASE WHEN status = 'INPROGRESS' THEN 1 ELSE NULL END) AS \"In Progress\", "
         "COUNT(CASE WHEN status = 'COMPLETE' THEN 1 ELSE NULL END) AS \"Complete\" "
         "FROM casesvc.casegroup "
         "WHERE collection_exercise_id = :collection_exercise_id "
-        "AND sample_unit_ref NOT LIKE '1111%'), "
+        "AND sample_unit_ref NOT LIKE '1111%'"
     )
 
     case_result = case_engine.execute(
         case_query, survey_id=survey_id, collection_exercise_id=collection_exercise_id
     ).all()
 
-    result_dict["sampleSize"] = len(case_result)
+    result_dict["sampleSize"] = getattr(case_result[0], "Sample Size")
+    result_dict["inProgress"] = getattr(case_result[0], "In Progress")
+    result_dict["notStarted"] = getattr(case_result[0], "Not Started")
+    result_dict["completed"] = getattr(case_result[0], "Complete")
     logger.info(case_result)
     # Should we filter out the 1111* ones?  Maybe we get them in the initial search then filter them out and do some
     # logging saying 'filtered out x number of test reporting units to make it obvious'
 
-    # Need to get all business parties related to the cases
-
-    party_query = text(
-        "business_details AS "
-        "(SELECT DISTINCT "
-        "b.business_ref AS sample_unit_ref, "
-        "ba.business_id AS business_party_uuid "
-        "FROM "
-        "partysvc.business_attributes ba, partysvc.business b "
-        "WHERE "
-        "ba.collection_exercise = :collection_exercise_id and "
-        "ba.business_id = b.party_uuid and "
-        "b.business_ref NOT LIKE '1111%'), "
-    )
-    party_result = party_engine.execute(party_query, survey_id=survey_id, collection_exercise_id=collection_exercise_id)
-    logger.info(party_result)
-
-    extra_query = text(
-        "case_details AS "
-        "(select sample_unit_ref "
+    # Get all the party_ids for all the businesses that are part of the collection exercise
+    case_business_ids_query = text(
+        "SELECT party_id "
         "FROM casesvc.casegroup "
         "WHERE collection_exercise_id = :collection_exercise_id and "
-        "sample_unit_ref NOT LIKE '1111%'), "
-        "respondent_details AS "
-        "(SELECT e.business_id AS business_party_uuid, "
-        "e.status AS enrolment_status "
-        "FROM partysvc.enrolment e "
-        "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id "
-        "WHERE "
-        "e.survey_id = :survey_id), "
-        "survey_enrolments AS "
-        "(SELECT "
-        "rd.enrolment_status as status "
-        "FROM "
-        "case_details cd "
-        "LEFT JOIN business_details bd ON bd.sample_unit_ref=cd.sample_unit_ref "
-        "LEFT JOIN respondent_details rd ON bd.business_party_uuid = rd.business_party_uuid), "
-        "party_figures AS "
-        "(SELECT COUNT(CASE WHEN survey_enrolments.status = 'ENABLED' THEN 1 ELSE NULL END) AS \"Total Enrolled\", "
-        "COUNT(CASE WHEN survey_enrolments.status = 'PENDING' THEN 1 ELSE NULL END) AS \"Total Pending\" "
-        "FROM survey_enrolments) "
-        "SELECT * FROM case_figures, party_figures"
+        "sample_unit_ref NOT LIKE '1111%'"
     )
-    logger.info(extra_query)
 
-    logger.info(party_query)
-    report_figures = engine.execute(
-        case_query, survey_id=survey_id, collection_exercise_id=collection_exercise_id
-    ).first()
+    case_business_ids_result = case_engine.execute(
+        case_business_ids_query, collection_exercise_id=collection_exercise_id
+    )
 
-    if any(column is None for column in report_figures.values()):
-        raise NoDataException
+    # TODO get the values in a list in a tidier way...
+    business_id_result = case_business_ids_result.all()
+    business_ids_list = []
+    business_ids_string = ""
+    for row in business_id_result:
+        business_ids_list.append(str(getattr(row, "party_id")))
+        business_ids_string += f"'{str(getattr(row, 'party_id'))}', "
 
-    return report_figures
+    # slice off the tailing ', '
+    business_ids_string = business_ids_string[:-2]
 
+    # Get all the enrolments for the survey the exercise is for but only for the businesses
+    enrolment_details_query_text = (
+        f"SELECT * "
+        f"FROM partysvc.enrolment e "
+        f"WHERE "
+        f"e.survey_id = :survey_id AND e.business_id IN ({business_ids_string}) "
+    )
 
-def get_report(survey_id, collection_exercise_id, engine):
-    report_figures = get_report_figures(survey_id, collection_exercise_id, engine)
+    enrolment_details_query = text(enrolment_details_query_text)
+    enrolment_details_result = party_engine.execute(enrolment_details_query, survey_id=survey_id)
+    blah = enrolment_details_result.all()
 
-    return {
-        "inProgress": report_figures["In Progress"],
-        "accountsPending": report_figures["Total Pending"],
-        "accountsEnrolled": report_figures["Total Enrolled"],
-        "notStarted": report_figures["Not Started"],
-        "completed": report_figures["Complete"],
-        "sampleSize": report_figures["Sample Size"],
-    }
+    pending = 0
+    enabled = 0
+    for row in blah:
+        if getattr(row, "status") == "ENABLED":
+            enabled += 1
+        if getattr(row, "status") == "PENDING":
+            pending += 1
+
+    result_dict["accountsPending"] = pending
+    result_dict["accountsEnrolled"] = enabled
+
+    return result_dict
 
 
 @response_dashboard_api.route("/survey/<survey_id>/collection-exercise/<collection_exercise_id>")
 class ResponseDashboard(Resource):
     @staticmethod
     def get(survey_id, collection_exercise_id):
-
-        engine = app.db.engine
 
         parsed_survey_id = parse_uuid(survey_id)
         if not parsed_survey_id:
@@ -136,7 +115,7 @@ class ResponseDashboard(Resource):
             abort(400, "Malformed collection exercise ID")
 
         try:
-            report = get_report(parsed_survey_id, parsed_collection_exercise_id, engine)
+            report = get_report_figures(survey_id, collection_exercise_id)
         except NoDataException:
             abort(404, "Invalid collection exercise or survey ID")
 

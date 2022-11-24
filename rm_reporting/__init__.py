@@ -12,6 +12,8 @@ from rm_reporting.logger_config import logger_initial_config
 
 def initialise_db(app):
     app.db = create_connection(app.config["DATABASE_URI"])
+    app.case_db = create_connection(app.config["DATABASE_BINDS"]["case_db"])
+    app.party_db = create_connection(app.config["DATABASE_BINDS"]["party_db"])
 
 
 def create_connection(db_connection_uri):
