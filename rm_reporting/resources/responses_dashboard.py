@@ -43,7 +43,6 @@ def get_report_figures(survey_id, collection_exercise_id):
     result_dict["inProgress"] = getattr(case_result[0], "In Progress")
     result_dict["notStarted"] = getattr(case_result[0], "Not Started")
     result_dict["completed"] = getattr(case_result[0], "Complete")
-    logger.info(case_result)
     # Should we filter out the 1111* ones?  Maybe we get them in the initial search then filter them out and do some
     # logging saying 'filtered out x number of test reporting units to make it obvious'
 
