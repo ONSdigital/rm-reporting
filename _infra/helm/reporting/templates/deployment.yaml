@@ -156,6 +156,12 @@ spec:
               secretKeyRef:
                 name: db-credentials
                 key: {{ .Values.database.secrets.casePasswordKey }}
+          - name: CASE_DATABASE_URI
+            {{- if .Values.database.sqlProxyEnabled }}
+            value: "postgresql://$(CASE_DB_USERNAME):$(CASE_DB_PASSWORD)@127.0.0.1:$(DB_PORT)/$(CASE_DB_NAME)"
+            {{- else }}
+            value: "postgresql://$(CASE_DB_USERNAME):$(CASE_DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(CASE_DB_NAME)"
+            {{- end }}
           - name: PARTY_DB_NAME
             valueFrom:
               secretKeyRef:
@@ -171,6 +177,14 @@ spec:
               secretKeyRef:
                 name: db-credentials
                 key: {{ .Values.database.secrets.partyPasswordKey }}
+          - name: PARTY_DATABASE_URI
+            {{- if .Values.database.sqlProxyEnabled }}
+            value: "postgresql://$(PARTY_DB_USERNAME):$(PARTY_DB_PASSWORD)@127.0.0.1:$(DB_PORT)/$(PARTY_DB_NAME)"
+            {{- else }}
+            value: "postgresql://$(PARTY_DB_USERNAME):$(PARTY_DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(PARTY_DB_NAME)"
+            {{- end }}
+
+
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/credentials.json
           resources:
