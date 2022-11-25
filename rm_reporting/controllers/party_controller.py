@@ -22,12 +22,12 @@ def get_attribute_data(collection_exercise_id):
     )
     logger.info("About to get party attributes")
     attributes_result = party_engine.execute(attributes, collection_exercise_id=collection_exercise_id).all()
-    logger.info("Got party attributes")
     result_dict = {str(getattr(item, "business_party_uuid")): item for item in attributes_result}
+    logger.info("Got party attributes")
     return result_dict
 
 
-def get_enrolment_data(survey_id, business_ids_string) -> dict:
+def get_enrolment_data(survey_id, business_ids_string):
     party_engine = app.party_db.engine
     # Get list of respondents for all those businesses for this survey (via enrolment table)
     # Get all the enrolments for the survey the exercise is for but only for the businesses
@@ -39,8 +39,6 @@ def get_enrolment_data(survey_id, business_ids_string) -> dict:
     )
 
     enrolment_details_query = text(enrolment_details_query_text)
-    # TODO maybe loop over it, converting it into a dict keyed by the ru_ref for easy access later on as theres a
-    # lot of wasted work looping over all the results again and again
     logger.info("About to get enrolment details")
     enrolment_details_result = party_engine.execute(enrolment_details_query, survey_id=survey_id).all()
 
@@ -50,8 +48,6 @@ def get_enrolment_data(survey_id, business_ids_string) -> dict:
 
         # slice off the tailing ', '
     respondent_ids_string = respondent_ids_string[:-2]
-
-    logger.info("Got enrolment details")
     resulting_dict = {}
     for row in enrolment_details_result:
         business_id = str(getattr(row, "business_id"))
@@ -64,13 +60,16 @@ def get_enrolment_data(survey_id, business_ids_string) -> dict:
     #     '123': [{'respondent_id': 1, 'status': 'active'}, {'respondent_id': 2, 'status': 'active'}]
     #     '456': [{'respondent_id': 1, 'status': 'active'}, {'respondent_id': 3, 'status': 'active'}]
     # }
+    logger.info("Got enrolment details")
     return resulting_dict, respondent_ids_string
 
 
 def get_respondent_data(respondent_ids_string) -> dict:
+    logger.info("About to get respondent data")
     party_engine = app.party_db.engine
     respondent_details_query_text = f"SELECT * FROM partysvc.respondent r WHERE r.id IN ({respondent_ids_string}) "
     respondent_details_query = text(respondent_details_query_text)
     respondent_details_result = party_engine.execute(respondent_details_query).all()
     results_dict = {str(getattr(item, "id")): item for item in respondent_details_result}
+    logger.info("Got respondent data")
     return results_dict
