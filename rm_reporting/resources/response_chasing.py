@@ -116,6 +116,8 @@ class ResponseChasingDownload(Resource):
                     break
 
             # Create a row in the spreadsheet for each enrolment for this survey in the business
+            number_of_enrolments = len(enrolment_details_result)
+            enrolment_count_for_business = 0
             for enrolment in enrolment_details_result:
                 if getattr(enrolment, "business_id") == getattr(row, "party_id"):
                     # TODO improve this.  For now we know it's ordered by id so id - 1 gets us the right value in the
@@ -141,6 +143,23 @@ class ResponseChasingDownload(Resource):
                         respondent_account_status,
                     ]
                     ws.append(business)
+                    enrolment_count_for_business += 1
+
+            # If there are no enrolments for the business, we still need to report on it
+            if enrolment_count_for_business == 0:
+                business = [
+                    survey_status,
+                    ru_ref,
+                    ru_name,
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                ]
+                ws.append(business)
+
+
 
         wb.active = 1
         wb.save(output)
