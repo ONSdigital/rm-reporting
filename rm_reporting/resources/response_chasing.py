@@ -116,7 +116,6 @@ class ResponseChasingDownload(Resource):
                     break
 
             # Create a row in the spreadsheet for each enrolment for this survey in the business
-            number_of_enrolments = len(enrolment_details_result)
             enrolment_count_for_business = 0
             for enrolment in enrolment_details_result:
                 if getattr(enrolment, "business_id") == getattr(row, "party_id"):
@@ -158,8 +157,6 @@ class ResponseChasingDownload(Resource):
                     "",
                 ]
                 ws.append(business)
-
-
 
         wb.active = 1
         wb.save(output)
