@@ -119,10 +119,16 @@ class ResponseChasingDownload(Resource):
             enrolment_count_for_business = 0
             for enrolment in enrolment_details_result:
                 if getattr(enrolment, "business_id") == getattr(row, "party_id"):
-                    # TODO improve this.  For now we know it's ordered by id so id - 1 gets us the right value in the
-                    # list.
-                    respondent_index = getattr(enrolment, "respondent_id") - 1
-                    respondent_details = respondent_details_result[respondent_index]
+
+                    # Get the resolved respondent details from the earlier result.  For now, we have to loop over the
+                    # list to find the right one, but we can reorganise it for easier access
+                    respondent_details = None
+                    for respondent in respondent_details_result:
+                        # We need to handle the possibility of the respondent being deleted
+                        if getattr(respondent, "id") == getattr(enrolment, "respondent_id"):
+                            respondent_details = respondent
+                            break
+
                     enrolment_status = getattr(enrolment, "status")
                     respondent_name = (
                         getattr(respondent_details, "first_name") + " " + getattr(respondent_details, "last_name")
