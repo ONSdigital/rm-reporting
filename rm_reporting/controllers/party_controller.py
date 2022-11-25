@@ -23,7 +23,8 @@ def get_attribute_data(collection_exercise_id):
     logger.info("About to get party attributes")
     attributes_result = party_engine.execute(attributes, collection_exercise_id=collection_exercise_id).all()
     logger.info("Got party attributes")
-    return attributes_result
+    result_dict = {str(getattr(item, "business_party_uuid")): item for item in attributes_result}
+    return result_dict
 
 
 def get_enrolment_data(survey_id, business_ids_string) -> dict:
@@ -53,7 +54,7 @@ def get_enrolment_data(survey_id, business_ids_string) -> dict:
     logger.info("Got enrolment details")
     resulting_dict = {}
     for row in enrolment_details_result:
-        business_id = str(getattr(row, 'business_id'))
+        business_id = str(getattr(row, "business_id"))
         if resulting_dict.get(business_id) is None:
             resulting_dict[business_id] = [row]
         else:

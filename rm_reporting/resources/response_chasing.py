@@ -57,8 +57,9 @@ class ResponseChasingDownload(Resource):
 
         attributes_result = party_controller.get_attribute_data(collection_exercise_id)
 
-        enrolment_details_result, respondent_ids_string = party_controller.get_enrolment_data(survey_id,
-                                                                                              business_ids_string)
+        enrolment_details_result, respondent_ids_string = party_controller.get_enrolment_data(
+            survey_id, business_ids_string
+        )
 
         respondent_details_result = party_controller.get_respondent_data(respondent_ids_string)
 
@@ -68,14 +69,11 @@ class ResponseChasingDownload(Resource):
             logger.info("Dealing with ru", ru_ref=getattr(row, "sample_unit_ref"))
             survey_status = getattr(row, "status")
             ru_ref = getattr(row, "sample_unit_ref")
-            ru_name = ""
-            for business in attributes_result:
-                if getattr(business, "business_party_uuid") == getattr(row, "party_id"):
-                    ru_name = getattr(business, "business_name")
-                    break
+            attribute_data = attributes_result[str(getattr(row, "party_id"))]
+            ru_name = getattr(attribute_data, "business_name")
 
             # Create a row in the spreadsheet for each enrolment for this survey in the business
-            business_enrolments = enrolment_details_result.get(str(getattr(row, 'party_id')), [])
+            business_enrolments = enrolment_details_result.get(str(getattr(row, "party_id")), [])
             enrolment_count_for_business = 0
             for enrolment in business_enrolments:
                 respondent_details = respondent_details_result[str(getattr(enrolment, "respondent_id"))]
