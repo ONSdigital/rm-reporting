@@ -11,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
 
 from rm_reporting import app, response_chasing_api
+from rm_reporting.controllers import case_controller, party_controller
 
 logger = wrap_logger(logging.getLogger(__name__))
 
@@ -41,73 +42,25 @@ class ResponseChasingDownload(Resource):
             ws[cell] = header
             ws.column_dimensions[cell[0]].width = len(header)
 
-        case_engine = app.case_db.engine
-        party_engine = app.party_db.engine
-
         # Way to create spreadsheet
         # Get case data (and list of ru_refs and business_ids)
-        case_business_ids_query = text(
-            "SELECT party_id, sample_unit_ref, status "
-            "FROM casesvc.casegroup "
-            "WHERE collection_exercise_id = :collection_exercise_id and "
-            "sample_unit_ref NOT LIKE '1111%'"
-        )
-        logger.info("About to get case data")
-        case_result = case_engine.execute(case_business_ids_query, collection_exercise_id=collection_exercise_id).all()
-        logger.info("Got case data")
+        case_result = case_controller.get_case_data(collection_exercise_id)
+
         # Get all the party_ids for all the businesses that are part of the collection exercise
         # TODO get the values in a list in a tidier way...
-        business_ids_list = []
         business_ids_string = ""
         for row in case_result:
-            business_ids_list.append(str(getattr(row, "party_id")))
             business_ids_string += f"'{str(getattr(row, 'party_id'))}', "
 
         # slice off the tailing ', '
         business_ids_string = business_ids_string[:-2]
 
-        # Get party attribute data for all those ru_refs (business_attributes table)
-        attributes = (
-            f"SELECT DISTINCT "
-            f"ba.collection_exercise As collection_exercise_uuid, "
-            f"ba.business_id AS business_party_uuid, "
-            f"ba.attributes->> 'name' AS business_name "
-            f"FROM partysvc.business_attributes ba "
-            f"WHERE "
-            f"ba.collection_exercise = '{collection_exercise_id}'"
-        )
-        logger.info("About to get party attributes")
-        attributes_result = party_engine.execute(attributes, collection_exercise_id=collection_exercise_id).all()
-        logger.info("Got party attributes")
+        attributes_result = party_controller.get_attribute_data(collection_exercise_id)
 
-        # TODO maybe loop over it, converting it into a dict keyed by the ru_ref for easy access later on
-        # Get list of respondents for all those businesses for this survey (via enrolment table)
-        # Get all the enrolments for the survey the exercise is for but only for the businesses
-        enrolment_details_query_text = (
-            f"SELECT * "
-            f"FROM partysvc.enrolment e "
-            f"WHERE "
-            f"e.survey_id = :survey_id AND e.business_id IN ({business_ids_string}) "
-        )
+        enrolment_details_result, respondent_ids_string = party_controller.get_enrolment_data(survey_id,
+                                                                                              business_ids_string)
 
-        enrolment_details_query = text(enrolment_details_query_text)
-        # TODO maybe loop over it, converting it into a dict keyed by the ru_ref for easy access later on as theres a
-        # lot of wasted work looping over all the results again and again
-        logger.info("About to get enrolment details")
-        enrolment_details_result = party_engine.execute(enrolment_details_query, survey_id=survey_id).all()
-        logger.info("Got enrolment details")
-        respondent_ids_string = ""
-        for row in enrolment_details_result:
-            respondent_ids_string += f"'{str(getattr(row, 'respondent_id'))}', "
-
-            # slice off the tailing ', '
-        respondent_ids_string = respondent_ids_string[:-2]
-
-        # Resolve details of all those respondents (respondent table)
-        respondent_details_query_text = f"SELECT * FROM partysvc.respondent r WHERE r.id IN ({respondent_ids_string}) "
-
-        respondent_details_query = text(respondent_details_query_text)
-        respondent_details_result = party_engine.execute(respondent_details_query).all()
+        respondent_details_result = party_controller.get_respondent_data(respondent_ids_string)
 
         # Loop over all the cases, filling in the blanks along the way and add each row to the spreadsheet
         logger.info("About to loop over all the data")
@@ -122,41 +75,31 @@ class ResponseChasingDownload(Resource):
                     break
 
             # Create a row in the spreadsheet for each enrolment for this survey in the business
+            business_enrolments = enrolment_details_result.get(str(getattr(row, 'party_id')), [])
             enrolment_count_for_business = 0
-            for enrolment in enrolment_details_result:
-                logger.info("Dealing with enrolments for business", business_id=getattr(enrolment, "business_id"))
-                if getattr(enrolment, "business_id") == getattr(row, "party_id"):
+            for enrolment in business_enrolments:
+                respondent_details = respondent_details_result[str(getattr(enrolment, "respondent_id"))]
 
-                    # Get the resolved respondent details from the earlier result.  For now, we have to loop over the
-                    # list to find the right one, but we can reorganise it for easier access
-                    respondent_details = None
-                    for respondent in respondent_details_result:
-                        # We need to handle the possibility of the respondent being deleted
-                        if getattr(respondent, "id") == getattr(enrolment, "respondent_id"):
-                            respondent_details = respondent
-                            break
+                enrolment_status = getattr(enrolment, "status")
+                respondent_name = (
+                    getattr(respondent_details, "first_name") + " " + getattr(respondent_details, "last_name")
+                )
+                respondent_telephone = getattr(respondent_details, "telephone")
+                respondent_email = getattr(respondent_details, "email_address")
+                respondent_account_status = getattr(respondent_details, "status")
 
-                    enrolment_status = getattr(enrolment, "status")
-                    respondent_name = (
-                        getattr(respondent_details, "first_name") + " " + getattr(respondent_details, "last_name")
-                    )
-                    respondent_telephone = getattr(respondent_details, "telephone")
-                    respondent_email = getattr(respondent_details, "email_address")
-                    respondent_account_status = getattr(respondent_details, "status")
-
-                    business = [
-                        survey_status,
-                        ru_ref,
-                        ru_name,
-                        enrolment_status,
-                        respondent_name,
-                        respondent_telephone,
-                        respondent_email,
-                        respondent_account_status,
-                    ]
-                    ws.append(business)
-                    enrolment_count_for_business += 1
-                    logger.info("Added row to the table")
+                business = [
+                    survey_status,
+                    ru_ref,
+                    ru_name,
+                    enrolment_status,
+                    respondent_name,
+                    respondent_telephone,
+                    respondent_email,
+                    respondent_account_status,
+                ]
+                ws.append(business)
+                enrolment_count_for_business += 1
 
             # If there are no enrolments for the business, we still need to report on it
             if enrolment_count_for_business == 0:
@@ -171,7 +114,6 @@ class ResponseChasingDownload(Resource):
                     "",
                 ]
                 ws.append(business)
-                logger.info("Added empty row to the table")
 
         wb.active = 1
         wb.save(output)
