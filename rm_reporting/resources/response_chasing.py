@@ -52,9 +52,9 @@ class ResponseChasingDownload(Resource):
             "WHERE collection_exercise_id = :collection_exercise_id and "
             "sample_unit_ref NOT LIKE '1111%'"
         )
-
+        logger.info("About to get case data")
         case_result = case_engine.execute(case_business_ids_query, collection_exercise_id=collection_exercise_id).all()
-
+        logger.info("Got case data")
         # Get all the party_ids for all the businesses that are part of the collection exercise
         # TODO get the values in a list in a tidier way...
         business_ids_list = []
@@ -76,8 +76,10 @@ class ResponseChasingDownload(Resource):
             f"WHERE "
             f"ba.collection_exercise = '{collection_exercise_id}'"
         )
-
+        logger.info("About to get party attributes")
         attributes_result = party_engine.execute(attributes, collection_exercise_id=collection_exercise_id).all()
+        logger.info("Got party attributes")
+
         # TODO maybe loop over it, converting it into a dict keyed by the ru_ref for easy access later on
         # Get list of respondents for all those businesses for this survey (via enrolment table)
         # Get all the enrolments for the survey the exercise is for but only for the businesses
@@ -91,7 +93,9 @@ class ResponseChasingDownload(Resource):
         enrolment_details_query = text(enrolment_details_query_text)
         # TODO maybe loop over it, converting it into a dict keyed by the ru_ref for easy access later on as theres a
         # lot of wasted work looping over all the results again and again
+        logger.info("About to get enrolment details")
         enrolment_details_result = party_engine.execute(enrolment_details_query, survey_id=survey_id).all()
+        logger.info("Got enrolment details")
         respondent_ids_string = ""
         for row in enrolment_details_result:
             respondent_ids_string += f"'{str(getattr(row, 'respondent_id'))}', "
@@ -106,7 +110,9 @@ class ResponseChasingDownload(Resource):
         respondent_details_result = party_engine.execute(respondent_details_query).all()
 
         # Loop over all the cases, filling in the blanks along the way and add each row to the spreadsheet
+        logger.info("About to loop over all the data")
         for row in case_result:
+            logger.info("Dealing with ru", ru_ref=getattr(row, "sample_unit_ref"))
             survey_status = getattr(row, "status")
             ru_ref = getattr(row, "sample_unit_ref")
             ru_name = ""
@@ -118,6 +124,7 @@ class ResponseChasingDownload(Resource):
             # Create a row in the spreadsheet for each enrolment for this survey in the business
             enrolment_count_for_business = 0
             for enrolment in enrolment_details_result:
+                logger.info("Dealing with enrolments for business", business_id=getattr(enrolment, "business_id"))
                 if getattr(enrolment, "business_id") == getattr(row, "party_id"):
 
                     # Get the resolved respondent details from the earlier result.  For now, we have to loop over the
@@ -149,6 +156,7 @@ class ResponseChasingDownload(Resource):
                     ]
                     ws.append(business)
                     enrolment_count_for_business += 1
+                    logger.info("Added row to the table")
 
             # If there are no enrolments for the business, we still need to report on it
             if enrolment_count_for_business == 0:
@@ -163,10 +171,12 @@ class ResponseChasingDownload(Resource):
                     "",
                 ]
                 ws.append(business)
+                logger.info("Added empty row to the table")
 
         wb.active = 1
         wb.save(output)
         wb.close()
+        logger.info("Finished putting together spreadsheet")
 
         response = make_response(output.getvalue(), 200)
         response.headers["Content-Disposition"] = f"attachment; filename=response_chasing_{collection_exercise_id}.xlsx"
