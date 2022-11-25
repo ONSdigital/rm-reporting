@@ -53,7 +53,6 @@ api.add_namespace(response_dashboard_api)
 
 from rm_reporting.resources.info import Info  # NOQA
 from rm_reporting.resources.response_chasing import ResponseChasingDownload  # NOQA
-from rm_reporting.resources.response_chasing import SocialMIDownload  # NOQA
 from rm_reporting.resources.responses_dashboard import ResponseDashboard  # NOQA
 
 api.init_app(app)
