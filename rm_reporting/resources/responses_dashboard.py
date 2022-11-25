@@ -78,12 +78,11 @@ def get_report_figures(survey_id, collection_exercise_id):
     )
 
     enrolment_details_query = text(enrolment_details_query_text)
-    enrolment_details_result = party_engine.execute(enrolment_details_query, survey_id=survey_id)
-    blah = enrolment_details_result.all()
+    enrolment_details_result = party_engine.execute(enrolment_details_query, survey_id=survey_id).all()
 
     pending = 0
     enabled = 0
-    for row in blah:
+    for row in enrolment_details_result:
         if getattr(row, "status") == "ENABLED":
             enabled += 1
         if getattr(row, "status") == "PENDING":

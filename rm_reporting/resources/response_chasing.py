@@ -41,55 +41,106 @@ class ResponseChasingDownload(Resource):
             ws[cell] = header
             ws.column_dimensions[cell[0]].width = len(header)
 
-        engine = app.db.engine
+        case_engine = app.case_db.engine
+        party_engine = app.party_db.engine
 
-        collex_status = (
-            "WITH "
-            "business_details AS "
-            "(SELECT DISTINCT "
-            "ba.collection_exercise As collection_exercise_uuid, "
-            "b.business_ref AS sample_unit_ref, "
-            "ba.business_id AS business_party_uuid, "
-            "ba.attributes->> 'name' AS business_name "
-            "FROM "
-            "partysvc.business_attributes ba, partysvc.business b "
-            "WHERE "
-            f"ba.collection_exercise = '{collection_exercise_id}' and "
-            "ba.business_id = b.party_uuid), "
-            "case_details AS "
-            "(SELECT "
-            "cg.collection_exercise_id AS collection_exercise_uuid, cg.sample_unit_ref, "
-            "cg.status AS case_status "
-            "FROM casesvc.casegroup cg "
-            f"WHERE cg.collection_exercise_id = '{collection_exercise_id}' "
-            "ORDER BY cg.status, cg.sample_unit_ref), "
-            "respondent_details AS "
-            "(SELECT e.survey_id AS survey_uuid, e.business_id AS business_party_uuid, "
-            "e.status AS enrolment_status, "
-            "CONCAT(r.first_name, ' ', r.last_name) AS respondent_name, r.telephone, "
-            "r.email_address, r.status AS respondent_status "
-            "FROM partysvc.enrolment e "
-            "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id "
-            "WHERE "
-            f"e.survey_id = '{survey_id}') "
-            "SELECT cd.case_status, bd.sample_unit_ref, bd.business_name, "
-            "rd.enrolment_status, rd.respondent_name, "
-            "rd.telephone, rd.email_address, rd.respondent_status "
-            "FROM "
-            "case_details cd "
-            "LEFT JOIN business_details bd ON bd.sample_unit_ref=cd.sample_unit_ref "
-            "LEFT JOIN respondent_details rd ON bd.business_party_uuid = rd.business_party_uuid "
-            "ORDER BY sample_unit_ref, case_status;"
+        # Way to create spreadsheet
+        # Get case data (and list of ru_refs and business_ids)
+        case_business_ids_query = text(
+            "SELECT party_id, sample_unit_ref, status "
+            "FROM casesvc.casegroup "
+            "WHERE collection_exercise_id = :collection_exercise_id and "
+            "sample_unit_ref NOT LIKE '1111%'"
         )
-        try:
-            collex_details = engine.execute(text(collex_status))
-        except SQLAlchemyError:
-            logger.exception("SQL Alchemy query failed")
-            raise
 
-        for row in collex_details:
-            business = [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]]
-            ws.append(business)
+        case_result = case_engine.execute(case_business_ids_query, collection_exercise_id=collection_exercise_id).all()
+
+        # Get all the party_ids for all the businesses that are part of the collection exercise
+        # TODO get the values in a list in a tidier way...
+        business_ids_list = []
+        business_ids_string = ""
+        for row in case_result:
+            business_ids_list.append(str(getattr(row, "party_id")))
+            business_ids_string += f"'{str(getattr(row, 'party_id'))}', "
+
+        # slice off the tailing ', '
+        business_ids_string = business_ids_string[:-2]
+
+        # Get party attribute data for all those ru_refs (business_attributes table)
+        attributes = (
+            f"SELECT DISTINCT "
+            f"ba.collection_exercise As collection_exercise_uuid, "
+            f"ba.business_id AS business_party_uuid, "
+            f"ba.attributes->> 'name' AS business_name "
+            f"FROM partysvc.business_attributes ba "
+            f"WHERE "
+            f"ba.collection_exercise = '{collection_exercise_id}'"
+        )
+
+        attributes_result = party_engine.execute(attributes, collection_exercise_id=collection_exercise_id).all()
+        # TODO maybe loop over it, converting it into a dict keyed by the ru_ref for easy access later on
+        # Get list of respondents for all those businesses for this survey (via enrolment table)
+        # Get all the enrolments for the survey the exercise is for but only for the businesses
+        enrolment_details_query_text = (
+            f"SELECT * "
+            f"FROM partysvc.enrolment e "
+            f"WHERE "
+            f"e.survey_id = :survey_id AND e.business_id IN ({business_ids_string}) "
+        )
+
+        enrolment_details_query = text(enrolment_details_query_text)
+        # TODO maybe loop over it, converting it into a dict keyed by the ru_ref for easy access later on as theres a
+        # lot of wasted work looping over all the results again and again
+        enrolment_details_result = party_engine.execute(enrolment_details_query, survey_id=survey_id).all()
+        respondent_ids_string = ""
+        for row in enrolment_details_result:
+            respondent_ids_string += f"'{str(getattr(row, 'respondent_id'))}', "
+
+            # slice off the tailing ', '
+        respondent_ids_string = respondent_ids_string[:-2]
+
+        # Resolve details of all those respondents (respondent table)
+        respondent_details_query_text = f"SELECT * FROM partysvc.respondent r WHERE r.id IN ({respondent_ids_string}) "
+
+        respondent_details_query = text(respondent_details_query_text)
+        respondent_details_result = party_engine.execute(respondent_details_query).all()
+
+        # Loop over all the cases, filling in the blanks along the way and add each row to the spreadsheet
+        for row in case_result:
+            survey_status = getattr(row, "status")
+            ru_ref = getattr(row, "sample_unit_ref")
+            ru_name = ""
+            for business in attributes_result:
+                if getattr(business, "business_party_uuid") == getattr(row, "party_id"):
+                    ru_name = getattr(business, "business_name")
+                    break
+
+            # Create a row in the spreadsheet for each enrolment for this survey in the business
+            for enrolment in enrolment_details_result:
+                if getattr(enrolment, "business_id") == getattr(row, "party_id"):
+                    # TODO improve this.  For now we know it's ordered by id so id - 1 gets us the right value in the
+                    # list.
+                    respondent_index = getattr(enrolment, "respondent_id") - 1
+                    respondent_details = respondent_details_result[respondent_index]
+                    enrolment_status = getattr(enrolment, "status")
+                    respondent_name = (
+                        getattr(respondent_details, "first_name") + " " + getattr(respondent_details, "last_name")
+                    )
+                    respondent_telephone = getattr(respondent_details, "telephone")
+                    respondent_email = getattr(respondent_details, "email_address")
+                    respondent_account_status = getattr(respondent_details, "status")
+
+                    business = [
+                        survey_status,
+                        ru_ref,
+                        ru_name,
+                        enrolment_status,
+                        respondent_name,
+                        respondent_telephone,
+                        respondent_email,
+                        respondent_account_status,
+                    ]
+                    ws.append(business)
 
         wb.active = 1
         wb.save(output)
