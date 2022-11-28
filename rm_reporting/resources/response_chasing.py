@@ -2,11 +2,12 @@ import io
 import logging
 
 from flask import make_response
-from flask_restx import Resource
+from flask_restx import Resource, abort
 from openpyxl import Workbook
 from structlog import wrap_logger
 
 from rm_reporting import response_chasing_api
+from rm_reporting.common.validators import parse_uuid
 from rm_reporting.controllers import case_controller, party_controller
 
 logger = wrap_logger(logging.getLogger(__name__))
@@ -16,6 +17,18 @@ logger = wrap_logger(logging.getLogger(__name__))
 class ResponseChasingDownload(Resource):
     @staticmethod
     def get(collection_exercise_id, survey_id):
+        parsed_survey_id = parse_uuid(survey_id)
+        if not parsed_survey_id:
+            logger.debug("Responses dashboard endpoint received malformed survey ID", invalid_survey_id=survey_id)
+            abort(400, "Malformed survey ID")
+
+        parsed_collection_exercise_id = parse_uuid(collection_exercise_id)
+        if not parsed_collection_exercise_id:
+            logger.debug(
+                "Responses dashboard endpoint received malformed collection exercise ID",
+                invalid_collection_exercise_id=collection_exercise_id,
+            )
+            abort(400, "Malformed collection exercise ID")
 
         output = io.BytesIO()
         wb = Workbook(write_only=True)

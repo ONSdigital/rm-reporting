@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from flask import Response, json
+from flask import jsonify
 from flask_restx import Resource, abort
 from structlog import wrap_logger
 
@@ -26,13 +26,10 @@ def get_report_figures(survey_id, collection_exercise_id):
 
     # Get all cases for a collection exercise
     case_result = case_controller.get_exercise_completion_stats(collection_exercise_id)
-
     result_dict["sampleSize"] = getattr(case_result[0], "Sample Size")
     result_dict["inProgress"] = getattr(case_result[0], "In Progress")
     result_dict["notStarted"] = getattr(case_result[0], "Not Started")
     result_dict["completed"] = getattr(case_result[0], "Complete")
-    # Should we filter out the 1111* ones?  Maybe we get them in the initial search then filter them out and do some
-    # logging saying 'filtered out x number of test reporting units to make it obvious'
 
     # Get all the party_ids for all the businesses that are part of the collection exercise
     business_ids_string = case_controller.get_all_business_ids_for_collection_exercise(collection_exercise_id)
@@ -75,12 +72,10 @@ class ResponseDashboard(Resource):
 
         try:
             report = get_report_figures(survey_id, collection_exercise_id)
+            response = {
+                "metadata": {"timeUpdated": datetime.now().timestamp(), "collectionExerciseId": collection_exercise_id},
+                "report": report,
+            }
+            return jsonify(response)
         except NoDataException:
             abort(404, "Invalid collection exercise or survey ID")
-
-        response = {
-            "metadata": {"timeUpdated": datetime.now().timestamp(), "collectionExerciseId": collection_exercise_id},
-            "report": report,
-        }
-
-        return Response(json.dumps(response), content_type="application/json")

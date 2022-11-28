@@ -67,8 +67,7 @@ def get_enrolment_data(survey_id, business_ids_string) -> tuple[dict[str, list],
 def get_respondent_data(respondent_ids_string) -> dict:
     logger.info("About to get respondent data")
     party_engine = app.party_db.engine
-    respondent_details_query_text = f"SELECT * FROM partysvc.respondent r WHERE r.id IN ({respondent_ids_string}) "
-    respondent_details_query = text(respondent_details_query_text)
+    respondent_details_query = text(f"SELECT * FROM partysvc.respondent r WHERE r.id IN ({respondent_ids_string}) ")
     respondent_details_result = party_engine.execute(respondent_details_query).all()
     results_dict = {str(getattr(item, "id")): item for item in respondent_details_result}
     logger.info("Got respondent data")
