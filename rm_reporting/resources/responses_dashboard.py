@@ -3,17 +3,18 @@ from datetime import datetime
 
 from flask import Response, json
 from flask_restx import Resource, abort
-from sqlalchemy import text
 from structlog import wrap_logger
 
-from rm_reporting import app, response_dashboard_api
+from rm_reporting import response_dashboard_api
 from rm_reporting.common.validators import parse_uuid
+from rm_reporting.controllers import case_controller, party_controller
 from rm_reporting.exceptions import NoDataException
 
 logger = wrap_logger(logging.getLogger(__name__))
 
 
 def get_report_figures(survey_id, collection_exercise_id):
+    logger.info("Getting report figures", survey_id=survey_id, collection_exercise_id=collection_exercise_id)
     result_dict = {
         "inProgress": 0,
         "accountsPending": 0,
@@ -22,22 +23,9 @@ def get_report_figures(survey_id, collection_exercise_id):
         "completed": 0,
         "sampleSize": 0,
     }
-    case_engine = app.case_db.engine
-    party_engine = app.party_db.engine
-    # Get all cases for a collection exercise
-    case_query = text(
-        'SELECT COUNT(*) AS "Sample Size", '
-        "COUNT(CASE WHEN status = 'NOTSTARTED' THEN 1 ELSE NULL END) AS \"Not Started\", "
-        "COUNT(CASE WHEN status = 'INPROGRESS' THEN 1 ELSE NULL END) AS \"In Progress\", "
-        "COUNT(CASE WHEN status = 'COMPLETE' THEN 1 ELSE NULL END) AS \"Complete\" "
-        "FROM casesvc.casegroup "
-        "WHERE collection_exercise_id = :collection_exercise_id "
-        "AND sample_unit_ref NOT LIKE '1111%'"
-    )
 
-    case_result = case_engine.execute(
-        case_query, survey_id=survey_id, collection_exercise_id=collection_exercise_id
-    ).all()
+    # Get all cases for a collection exercise
+    case_result = case_controller.get_exercise_completion_stats(collection_exercise_id)
 
     result_dict["sampleSize"] = getattr(case_result[0], "Sample Size")
     result_dict["inProgress"] = getattr(case_result[0], "In Progress")
@@ -47,38 +35,10 @@ def get_report_figures(survey_id, collection_exercise_id):
     # logging saying 'filtered out x number of test reporting units to make it obvious'
 
     # Get all the party_ids for all the businesses that are part of the collection exercise
-    case_business_ids_query = text(
-        "SELECT party_id "
-        "FROM casesvc.casegroup "
-        "WHERE collection_exercise_id = :collection_exercise_id and "
-        "sample_unit_ref NOT LIKE '1111%'"
-    )
-
-    case_business_ids_result = case_engine.execute(
-        case_business_ids_query, collection_exercise_id=collection_exercise_id
-    )
-
-    # TODO get the values in a list in a tidier way...
-    business_id_result = case_business_ids_result.all()
-    business_ids_list = []
-    business_ids_string = ""
-    for row in business_id_result:
-        business_ids_list.append(str(getattr(row, "party_id")))
-        business_ids_string += f"'{str(getattr(row, 'party_id'))}', "
-
-    # slice off the tailing ', '
-    business_ids_string = business_ids_string[:-2]
+    business_ids_string = case_controller.get_all_business_ids_for_collection_exercise(collection_exercise_id)
 
     # Get all the enrolments for the survey the exercise is for but only for the businesses
-    enrolment_details_query_text = (
-        f"SELECT * "
-        f"FROM partysvc.enrolment e "
-        f"WHERE "
-        f"e.survey_id = :survey_id AND e.business_id IN ({business_ids_string}) "
-    )
-
-    enrolment_details_query = text(enrolment_details_query_text)
-    enrolment_details_result = party_engine.execute(enrolment_details_query, survey_id=survey_id).all()
+    enrolment_details_result = party_controller.get_dashboard_enrolment_details(survey_id, business_ids_string)
 
     pending = 0
     enabled = 0
@@ -91,6 +51,7 @@ def get_report_figures(survey_id, collection_exercise_id):
     result_dict["accountsPending"] = pending
     result_dict["accountsEnrolled"] = enabled
 
+    logger.info("Successfully got report figures", survey_id=survey_id, collection_exercise_id=collection_exercise_id)
     return result_dict
 
 

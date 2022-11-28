@@ -23,17 +23,7 @@ class ResponseChasingDownload(Resource):
         ws.title = "Response Chasing Report"
 
         # Set headers
-        # headers = {
-        #     "A1": "Survey Status",
-        #     "B1": "Reporting Unit Ref",
-        #     "C1": "Reporting Unit Name",
-        #     "D1": "Enrolment Status",
-        #     "E1": "Respondent Name",
-        #     "F1": "Respondent Telephone",
-        #     "G1": "Respondent Email",
-        #     "H1": "Respondent Account Status",
-        # }
-        list_headers = [
+        headers = [
             "Survey Status",
             "Reporting Unit Ref",
             "Reporting Unit Name",
@@ -43,11 +33,7 @@ class ResponseChasingDownload(Resource):
             "Respondent Email",
             "Respondent Account Status",
         ]
-        ws.append(list_headers)
-
-        # for cell, header in headers.items():
-        #     ws[cell] = header
-        #     ws.column_dimensions[cell[0]].width = len(header)
+        ws.append(headers)
 
         # Get case data (and list of ru_refs and business_ids)
         case_result = case_controller.get_case_data(collection_exercise_id)
@@ -69,7 +55,6 @@ class ResponseChasingDownload(Resource):
         # Loop over all the cases, filling in the blanks along the way and add each row to the spreadsheet
         logger.info("About to loop over all the data")
         for row in case_result:
-            logger.info("Dealing with ru", ru_ref=getattr(row, "sample_unit_ref"))
             survey_status = getattr(row, "status")
             ru_ref = getattr(row, "sample_unit_ref")
             attribute_data = attributes_result[str(getattr(row, "party_id"))]

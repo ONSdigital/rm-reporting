@@ -27,7 +27,7 @@ def get_attribute_data(collection_exercise_id):
     return result_dict
 
 
-def get_enrolment_data(survey_id, business_ids_string):
+def get_enrolment_data(survey_id, business_ids_string) -> tuple[dict[str, list], str]:
     party_engine = app.party_db.engine
     # Get list of respondents for all those businesses for this survey (via enrolment table)
     # Get all the enrolments for the survey the exercise is for but only for the businesses
@@ -46,7 +46,7 @@ def get_enrolment_data(survey_id, business_ids_string):
     for row in enrolment_details_result:
         respondent_ids_string += f"'{str(getattr(row, 'respondent_id'))}', "
 
-        # slice off the tailing ', '
+    # slice off the tailing ', '
     respondent_ids_string = respondent_ids_string[:-2]
     resulting_dict = {}
     for row in enrolment_details_result:
@@ -73,3 +73,17 @@ def get_respondent_data(respondent_ids_string) -> dict:
     results_dict = {str(getattr(item, "id")): item for item in respondent_details_result}
     logger.info("Got respondent data")
     return results_dict
+
+
+def get_dashboard_enrolment_details(survey_id, business_ids_string) -> list:
+    party_engine = app.party_db.engine
+    enrolment_details_query_text = (
+        f"SELECT * "
+        f"FROM partysvc.enrolment e "
+        f"WHERE "
+        f"e.survey_id = :survey_id AND e.business_id IN ({business_ids_string}) "
+    )
+
+    enrolment_details_query = text(enrolment_details_query_text)
+    enrolment_details_result = party_engine.execute(enrolment_details_query, survey_id=survey_id).all()
+    return enrolment_details_result
