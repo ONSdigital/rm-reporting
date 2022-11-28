@@ -4,6 +4,16 @@ from unittest import TestCase, mock
 from rm_reporting import app
 
 
+class Row(object):
+    """
+    This is going represent a row returned from SqlAlchemy.  It's not a true representation, but creating a LegacyRow
+    in a matching format is incredibly difficult.  We'll just setattr what we need against it, and then it becomes a
+    close enough approximation
+    """
+
+    pass
+
+
 class TestResponseDashboard(TestCase):
     def setUp(self):
         self.test_client = app.test_client()
@@ -32,24 +42,24 @@ class TestResponseDashboard(TestCase):
         self.assertEqual(20, response_dict["report"]["inProgress"])
         self.assertEqual(70, response_dict["report"]["notStarted"])
 
-    # @mock.patch("rm_reporting.app.db")
-    # def test_dashboard_report_invalid_id(self, mock_db):
-    #     mock_db.engine.execute.return_value.first.return_value = {
-    #         "Sample Size": 100,
-    #         "Total Enrolled": 50,
-    #         "Total Pending": 10,
-    #         "Not Started": 100,
-    #         "In Progress": 30,
-    #         "Complete": None,
-    #     }
-    #     response = self.test_client.get(
-    #         "/reporting-api/v1/response-dashboard/survey/57586798-74e3-49fd-93da-a782ec5f5129"
-    #         "/collection-exercise/00000000-0000-0000-0000-000000000000"
-    #     )
-    #     error_response = json.loads(response.data)["message"]
-    #
-    #     self.assertEqual(response.status_code, 404)
-    #     self.assertEqual(error_response, "Invalid collection exercise or survey ID")
+    @mock.patch("rm_reporting.controllers.case_controller.get_exercise_completion_stats")
+    def test_dashboard_report_invalid_id(self, mock_function):
+
+        returned_row = Row()
+        setattr(returned_row, "Sample Size", 0)
+        setattr(returned_row, "In Progress", 0)
+        setattr(returned_row, "Not Started", 0)
+        setattr(returned_row, "Complete", 0)
+
+        mock_function.return_value = [returned_row]
+        response = self.test_client.get(
+            "/reporting-api/v1/response-dashboard/survey/57586798-74e3-49fd-93da-a782ec5f5129"
+            "/collection-exercise/00000000-0000-0000-0000-000000000000"
+        )
+        error_response = json.loads(response.data)["message"]
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(error_response, "Invalid collection exercise or survey ID")
 
     def test_dashboard_report_malformed_collection_exercise_id(self):
         response = self.test_client.get(

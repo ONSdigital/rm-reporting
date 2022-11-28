@@ -26,6 +26,8 @@ def get_report_figures(survey_id, collection_exercise_id):
 
     # Get all cases for a collection exercise
     case_result = case_controller.get_exercise_completion_stats(collection_exercise_id)
+    if getattr(case_result[0], "Sample Size") == 0:
+        raise NoDataException
     result_dict["sampleSize"] = getattr(case_result[0], "Sample Size")
     result_dict["inProgress"] = getattr(case_result[0], "In Progress")
     result_dict["notStarted"] = getattr(case_result[0], "Not Started")
