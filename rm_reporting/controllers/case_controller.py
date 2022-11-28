@@ -8,7 +8,13 @@ from rm_reporting import app
 logger = wrap_logger(logging.getLogger(__name__))
 
 
-def get_case_data(collection_exercise_id) -> list:
+def get_case_data(collection_exercise_id: str) -> list:
+    """
+    Gets the party_id (for the business), ru_ref and submission status for every case for a
+    given collection_exercise_id
+    :param collection_exercise_id: A uuid for a collection exercise
+    :return:
+    """
     logger.info("About to get case data")
     case_engine = app.case_db.engine
     case_business_ids_query = text(
@@ -22,7 +28,23 @@ def get_case_data(collection_exercise_id) -> list:
     return case_result
 
 
-def get_exercise_completion_stats(collection_exercise_id) -> list:
+def get_business_ids_from_case_data(case_result) -> str:
+    """
+    Takes a list of case results and returns a comma separated list of business_ids.
+
+    :param case_result: A list of rows from a sqlAlchemy .all() result.
+    :return: A string with all the party_ids comma separated
+    """
+    # TODO get the values in a list in a tidier way...
+    business_ids_string = ""
+    for row in case_result:
+        business_ids_string += f"'{str(getattr(row, 'party_id'))}', "
+    # slice off the tailing ', '
+    business_ids_string = business_ids_string[:-2]
+    return business_ids_string
+
+
+def get_exercise_completion_stats(collection_exercise_id: str) -> list:
     case_engine = app.case_db.engine
     case_query = text(
         'SELECT COUNT(*) AS "Sample Size", '
@@ -38,7 +60,7 @@ def get_exercise_completion_stats(collection_exercise_id) -> list:
     return case_result
 
 
-def get_all_business_ids_for_collection_exercise(collection_exercise_id) -> str:
+def get_all_business_ids_for_collection_exercise(collection_exercise_id: str) -> str:
     case_engine = app.case_db.engine
     case_business_ids_query = text(
         "SELECT party_id "

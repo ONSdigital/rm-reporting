@@ -11,9 +11,8 @@ from rm_reporting.logger_config import logger_initial_config
 
 
 def initialise_db(app):
-    app.db = create_connection(app.config["DATABASE_URI"])
-    app.case_db = create_connection(app.config["DATABASE_BINDS"]["case_db"])
-    app.party_db = create_connection(app.config["DATABASE_BINDS"]["party_db"])
+    app.case_db = create_connection(app.config["CASE_DATABASE_URI"])
+    app.party_db = create_connection(app.config["PARTY_DATABASE_URI"])
 
 
 def create_connection(db_connection_uri):
@@ -31,8 +30,6 @@ app = Flask(__name__)
 
 app_config = f"config.{os.environ.get('APP_SETTINGS', 'Config')}"
 app.config.from_object(app_config)
-# supports multiple db connections
-app.config["SQLALCHEMY_BINDS"] = app.config["DATABASE_BINDS"]
 
 app.url_map.strict_slashes = False
 
