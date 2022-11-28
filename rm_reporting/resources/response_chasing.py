@@ -18,25 +18,36 @@ class ResponseChasingDownload(Resource):
     def get(collection_exercise_id, survey_id):
 
         output = io.BytesIO()
-        wb = Workbook()
-        ws = wb.active
+        wb = Workbook(write_only=True)
+        ws = wb.create_sheet()
         ws.title = "Response Chasing Report"
 
         # Set headers
-        headers = {
-            "A1": "Survey Status",
-            "B1": "Reporting Unit Ref",
-            "C1": "Reporting Unit Name",
-            "D1": "Enrolment Status",
-            "E1": "Respondent Name",
-            "F1": "Respondent Telephone",
-            "G1": "Respondent Email",
-            "H1": "Respondent Account Status",
-        }
+        # headers = {
+        #     "A1": "Survey Status",
+        #     "B1": "Reporting Unit Ref",
+        #     "C1": "Reporting Unit Name",
+        #     "D1": "Enrolment Status",
+        #     "E1": "Respondent Name",
+        #     "F1": "Respondent Telephone",
+        #     "G1": "Respondent Email",
+        #     "H1": "Respondent Account Status",
+        # }
+        list_headers = [
+            "Survey Status",
+            "Reporting Unit Ref",
+            "Reporting Unit Name",
+            "Enrolment Status",
+            "Respondent Name",
+            "Respondent Telephone",
+            "Respondent Email",
+            "Respondent Account Status",
+        ]
+        ws.append(list_headers)
 
-        for cell, header in headers.items():
-            ws[cell] = header
-            ws.column_dimensions[cell[0]].width = len(header)
+        # for cell, header in headers.items():
+        #     ws[cell] = header
+        #     ws.column_dimensions[cell[0]].width = len(header)
 
         # Get case data (and list of ru_refs and business_ids)
         case_result = case_controller.get_case_data(collection_exercise_id)
