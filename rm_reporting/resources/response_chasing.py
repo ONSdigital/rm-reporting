@@ -38,25 +38,21 @@ class ResponseChasingDownload(Resource):
             ws[cell] = header
             ws.column_dimensions[cell[0]].width = len(header)
 
-        # Way to create spreadsheet
         # Get case data (and list of ru_refs and business_ids)
         case_result = case_controller.get_case_data(collection_exercise_id)
 
         # Get all the party_ids for all the businesses that are part of the collection exercise
-        # TODO get the values in a list in a tidier way...
-        business_ids_string = ""
-        for row in case_result:
-            business_ids_string += f"'{str(getattr(row, 'party_id'))}', "
+        business_ids_string = ResponseChasingDownload.get_business_ids_from_case_data(case_result)
 
-        # slice off the tailing ', '
-        business_ids_string = business_ids_string[:-2]
-
+        # Get the attribute data for all the businesses in this collection exercise
         attributes_result = party_controller.get_attribute_data(collection_exercise_id)
 
+        # Get all the respondents that are enrolled for all the businesses for this survey
         enrolment_details_result, respondent_ids_string = party_controller.get_enrolment_data(
             survey_id, business_ids_string
         )
 
+        # Resolve all the respondent party_ids into useful data (names, email, etc)
         respondent_details_result = party_controller.get_respondent_data(respondent_ids_string)
 
         # Loop over all the cases, filling in the blanks along the way and add each row to the spreadsheet
@@ -118,3 +114,19 @@ class ResponseChasingDownload(Resource):
         response.headers["Content-Disposition"] = f"attachment; filename=response_chasing_{collection_exercise_id}.xlsx"
         response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         return response
+
+    @staticmethod
+    def get_business_ids_from_case_data(case_result) -> str:
+        """
+        Takes a list of case results and returns a comma separated list of business_ids
+        Example output (as a string): 8a4bc9b4-1b8e-4c0f-be72-41da20b82f16, 5b3ac08f-8399-4548-b4d8-0bd2df723672
+        :param case_result:
+        :return:
+        """
+        # TODO get the values in a list in a tidier way...
+        business_ids_string = ""
+        for row in case_result:
+            business_ids_string += f"'{str(getattr(row, 'party_id'))}', "
+        # slice off the tailing ', '
+        business_ids_string = business_ids_string[:-2]
+        return business_ids_string
