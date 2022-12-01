@@ -51,17 +51,14 @@ def get_report_figures(survey_id, collection_exercise_id):
 class ResponseDashboard(Resource):
     @staticmethod
     def get(survey_id, collection_exercise_id):
-
-        parsed_survey_id = parse_uuid(survey_id)
-        if not parsed_survey_id:
-            logger.debug("Responses dashboard endpoint received malformed survey ID", invalid_survey_id=survey_id)
+        if not parse_uuid(survey_id):
+            logger.debug("Responses dashboard endpoint received malformed survey ID", survey_id=survey_id)
             abort(400, "Malformed survey ID")
 
-        parsed_collection_exercise_id = parse_uuid(collection_exercise_id)
-        if not parsed_collection_exercise_id:
+        if not parse_uuid(collection_exercise_id):
             logger.debug(
                 "Responses dashboard endpoint received malformed collection exercise ID",
-                invalid_collection_exercise_id=collection_exercise_id,
+                collection_exercise_id=collection_exercise_id,
             )
             abort(400, "Malformed collection exercise ID")
 
