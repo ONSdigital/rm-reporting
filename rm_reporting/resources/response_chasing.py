@@ -17,13 +17,11 @@ logger = wrap_logger(logging.getLogger(__name__))
 class ResponseChasingDownload(Resource):
     @staticmethod
     def get(collection_exercise_id, survey_id):
-        parsed_survey_id = parse_uuid(survey_id)
-        if not parsed_survey_id:
+        if not parse_uuid(survey_id):
             logger.debug("Responses dashboard endpoint received malformed survey ID", invalid_survey_id=survey_id)
             abort(400, "Malformed survey ID")
 
-        parsed_collection_exercise_id = parse_uuid(collection_exercise_id)
-        if not parsed_collection_exercise_id:
+        if not parse_uuid(collection_exercise_id):
             logger.debug(
                 "Responses dashboard endpoint received malformed collection exercise ID",
                 invalid_collection_exercise_id=collection_exercise_id,
@@ -61,9 +59,9 @@ class ResponseChasingDownload(Resource):
         attributes_result = party_controller.get_attribute_data(collection_exercise_id)
 
         # Get all the respondents that are enrolled for all the businesses for this survey
-        enrolment_details_result, respondent_ids_string = party_controller.get_enrolment_data(
-            survey_id, business_ids_string
-        )
+        enrolment_details_result = party_controller.get_enrolment_data(survey_id, business_ids_string)
+        formatted_enrolment_details_result = party_controller.format_enrolment_data(enrolment_details_result)
+        respondent_ids_string = party_controller.get_respondent_ids_from_enrolment_data(enrolment_details_result)
 
         # Resolve all the respondent party_ids into useful data (names, email, etc)
         respondent_details_result = party_controller.get_respondent_data(respondent_ids_string)
@@ -77,7 +75,7 @@ class ResponseChasingDownload(Resource):
             ru_name = getattr(attribute_data, "business_name")
 
             # Create a row in the spreadsheet for each enrolment for this survey in the business
-            business_enrolments = enrolment_details_result.get(str(getattr(row, "party_id")), [])
+            business_enrolments = formatted_enrolment_details_result.get(str(getattr(row, "party_id")), [])
             enrolment_count_for_business = 0
             for enrolment in business_enrolments:
                 respondent_details = respondent_details_result[str(getattr(enrolment, "respondent_id"))]

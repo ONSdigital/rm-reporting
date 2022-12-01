@@ -27,11 +27,11 @@ def get_attribute_data(collection_exercise_id):
     return result_dict
 
 
-def get_enrolment_data(survey_id, business_ids_string) -> tuple[dict[str, list], str]:
+def get_enrolment_data(survey_id, business_ids_string) -> list:
     # It shouldn't be possible for this to be empty as the download link only appears on live exercises.  But we
     # don't want it to go bang if we say, hit the api directly for a not ready exercise
     if business_ids_string == "":
-        return {}
+        return []
     party_engine = app.party_db.engine
     # Get list of respondents for all those businesses for this survey (via enrolment table)
     # Get all the enrolments for the survey the exercise is for but only for the businesses
@@ -45,13 +45,31 @@ def get_enrolment_data(survey_id, business_ids_string) -> tuple[dict[str, list],
     enrolment_details_query = text(enrolment_details_query_text)
     logger.info("About to get enrolment details")
     enrolment_details_result = party_engine.execute(enrolment_details_query, survey_id=survey_id).all()
+    return enrolment_details_result
 
+
+def get_respondent_ids_from_enrolment_data(enrolment_details_result: list) -> str:
     respondent_ids_string = ""
     for row in enrolment_details_result:
         respondent_ids_string += f"'{str(getattr(row, 'respondent_id'))}', "
 
     # slice off the tailing ', '
     respondent_ids_string = respondent_ids_string[:-2]
+    return respondent_ids_string
+
+
+def format_enrolment_data(enrolment_details_result: list) -> dict[str, list]:
+    """
+    Takes a list of enrolment details and formats them like below
+
+    example = {
+        '123': [{'respondent_id': 1, 'status': 'active'}, {'respondent_id': 2, 'status': 'active'}]
+        '456': [{'respondent_id': 1, 'status': 'active'}, {'respondent_id': 3, 'status': 'active'}]
+    }
+
+    :param enrolment_details_result:
+    :return:
+    """
     resulting_dict = {}
     for row in enrolment_details_result:
         business_id = str(getattr(row, "business_id"))
@@ -60,12 +78,8 @@ def get_enrolment_data(survey_id, business_ids_string) -> tuple[dict[str, list],
         else:
             resulting_dict[business_id].append(row)
 
-    # example = {
-    #     '123': [{'respondent_id': 1, 'status': 'active'}, {'respondent_id': 2, 'status': 'active'}]
-    #     '456': [{'respondent_id': 1, 'status': 'active'}, {'respondent_id': 3, 'status': 'active'}]
-    # }
     logger.info("Got enrolment details")
-    return resulting_dict, respondent_ids_string
+    return resulting_dict
 
 
 def get_respondent_data(respondent_ids_string) -> dict:
