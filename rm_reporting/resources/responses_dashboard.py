@@ -15,14 +15,7 @@ logger = wrap_logger(logging.getLogger(__name__))
 
 def get_report_figures(survey_id, collection_exercise_id):
     logger.info("Getting report figures", survey_id=survey_id, collection_exercise_id=collection_exercise_id)
-    result_dict = {
-        "inProgress": 0,
-        "accountsPending": 0,
-        "accountsEnrolled": 0,
-        "notStarted": 0,
-        "completed": 0,
-        "sampleSize": 0,
-    }
+    result_dict = {}
 
     # Get all cases for a collection exercise
     case_result = case_controller.get_exercise_completion_stats(collection_exercise_id)
@@ -34,10 +27,10 @@ def get_report_figures(survey_id, collection_exercise_id):
     result_dict["completed"] = getattr(case_result[0], "Complete")
 
     # Get all the party_ids for all the businesses that are part of the collection exercise
-    business_ids_string = case_controller.get_all_business_ids_for_collection_exercise(collection_exercise_id)
+    business_ids = case_controller.get_all_business_ids_for_collection_exercise(collection_exercise_id)
 
     # Get all the enrolments for the survey the exercise is for but only for the businesses
-    enrolment_details_result = party_controller.get_dashboard_enrolment_details(survey_id, business_ids_string)
+    enrolment_details_result = party_controller.get_enrolment_data(survey_id, business_ids)
 
     pending = 0
     enabled = 0

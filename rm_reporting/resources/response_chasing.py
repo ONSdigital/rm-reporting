@@ -18,13 +18,13 @@ class ResponseChasingDownload(Resource):
     @staticmethod
     def get(collection_exercise_id, survey_id):
         if not parse_uuid(survey_id):
-            logger.debug("Responses dashboard endpoint received malformed survey ID", invalid_survey_id=survey_id)
+            logger.info("Responses dashboard endpoint received malformed survey ID", survey_id=survey_id)
             abort(400, "Malformed survey ID")
 
         if not parse_uuid(collection_exercise_id):
-            logger.debug(
+            logger.info(
                 "Responses dashboard endpoint received malformed collection exercise ID",
-                invalid_collection_exercise_id=collection_exercise_id,
+                collection_exercise_id=collection_exercise_id,
             )
             abort(400, "Malformed collection exercise ID")
 
@@ -36,7 +36,6 @@ class ResponseChasingDownload(Resource):
         ws = wb.create_sheet()
         ws.title = "Response Chasing Report"
 
-        # Set headers
         headers = [
             "Survey Status",
             "Reporting Unit Ref",
@@ -67,7 +66,9 @@ class ResponseChasingDownload(Resource):
         respondent_details_result = party_controller.get_respondent_data(respondent_ids_string)
 
         # Loop over all the cases, filling in the blanks along the way and add each row to the spreadsheet
-        logger.info("About to loop over all the data")
+        logger.info(
+            "About to loop over all the cases", survey_id=survey_id, collection_exercise_id=collection_exercise_id
+        )
         for row in case_result:
             survey_status = getattr(row, "status")
             ru_ref = getattr(row, "sample_unit_ref")
@@ -114,11 +115,15 @@ class ResponseChasingDownload(Resource):
                     "",
                 ]
                 ws.append(business)
-        logger.info("Finished looping over cases")
+        logger.info(
+            "Finished looping over cases. Saving spreadsheet",
+            survey_id=survey_id,
+            collection_exercise_id=collection_exercise_id,
+        )
         wb.active = 1
         wb.save(output)
         wb.close()
-        logger.info("Finished putting together spreadsheet")
+        logger.info("Finished saving spreadsheet", survey_id=survey_id, collection_exercise_id=collection_exercise_id)
 
         response = make_response(output.getvalue(), 200)
         response.headers["Content-Disposition"] = f"attachment; filename=response_chasing_{collection_exercise_id}.xlsx"
