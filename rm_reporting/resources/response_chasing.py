@@ -31,6 +31,9 @@ class ResponseChasingDownload(Resource):
             abort(400, "Malformed collection exercise ID")
 
         output = io.BytesIO()
+        # A write_only workbook is a lot more performant at writing a large amount of data if you don't mind giving up
+        # some functionality.  We're not reading or doing anything fancy with this spreadsheet as we make it, so it's
+        # functionally no different.
         wb = Workbook(write_only=True)
         ws = wb.create_sheet()
         ws.title = "Response Chasing Report"
