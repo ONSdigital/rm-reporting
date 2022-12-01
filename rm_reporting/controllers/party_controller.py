@@ -28,6 +28,10 @@ def get_attribute_data(collection_exercise_id):
 
 
 def get_enrolment_data(survey_id, business_ids_string) -> tuple[dict[str, list], str]:
+    # It shouldn't be possible for this to be empty as the download link only appears on live exercises.  But we
+    # don't want it to go bang if we say, hit the api directly for a not ready exercise
+    if business_ids_string == "":
+        return {}
     party_engine = app.party_db.engine
     # Get list of respondents for all those businesses for this survey (via enrolment table)
     # Get all the enrolments for the survey the exercise is for but only for the businesses
@@ -66,6 +70,11 @@ def get_enrolment_data(survey_id, business_ids_string) -> tuple[dict[str, list],
 
 def get_respondent_data(respondent_ids_string) -> dict:
     logger.info("About to get respondent data")
+    # It's possible for a new survey that there are no respondents yet, so we don't want it to break in that case
+    if respondent_ids_string == "":
+        logger.info("Returning empty respondent data dict")
+        return {}
+
     party_engine = app.party_db.engine
     respondent_details_query = text(f"SELECT * FROM partysvc.respondent r WHERE r.id IN ({respondent_ids_string}) ")
     respondent_details_result = party_engine.execute(respondent_details_query).all()

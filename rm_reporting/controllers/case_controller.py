@@ -20,22 +20,21 @@ def get_case_data(collection_exercise_id: str) -> list:
     case_business_ids_query = text(
         "SELECT party_id, sample_unit_ref, status "
         "FROM casesvc.casegroup "
-        "WHERE collection_exercise_id = :collection_exercise_id and "
-        "sample_unit_ref NOT LIKE '1111%'"
+        "WHERE collection_exercise_id = :collection_exercise_id "
+        "ORDER BY sample_unit_ref, status"
     )
 
     case_result = case_engine.execute(case_business_ids_query, collection_exercise_id=collection_exercise_id).all()
     return case_result
 
 
-def get_business_ids_from_case_data(case_result) -> str:
+def get_business_ids_from_case_data(case_result: list) -> str:
     """
     Takes a list of case results and returns a comma separated list of business_ids.
 
     :param case_result: A list of rows from a sqlAlchemy .all() result.
     :return: A string with all the party_ids comma separated
     """
-    # TODO get the values in a list in a tidier way...
     business_ids_string = ""
     for row in case_result:
         business_ids_string += f"'{str(getattr(row, 'party_id'))}', "
