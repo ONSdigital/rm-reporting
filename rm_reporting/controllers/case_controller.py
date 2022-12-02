@@ -66,7 +66,7 @@ def get_exercise_completion_stats(collection_exercise_id: str) -> list:
 
 
 def get_all_business_ids_for_collection_exercise(collection_exercise_id: str) -> str:
-    logger.info("About to get all business  ids for collection exercise", collection_exercise_id=collection_exercise_id)
+    logger.info("About to get all business ids for collection exercise", collection_exercise_id=collection_exercise_id)
     case_engine = app.case_db.engine
     case_business_ids_query = text(
         "SELECT party_id "
