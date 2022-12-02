@@ -52,11 +52,11 @@ class ResponseDashboard(Resource):
     @staticmethod
     def get(survey_id, collection_exercise_id):
         if not parse_uuid(survey_id):
-            logger.debug("Responses dashboard endpoint received malformed survey ID", survey_id=survey_id)
+            logger.info("Responses dashboard endpoint received malformed survey ID", survey_id=survey_id)
             abort(400, "Malformed survey ID")
 
         if not parse_uuid(collection_exercise_id):
-            logger.debug(
+            logger.info(
                 "Responses dashboard endpoint received malformed collection exercise ID",
                 collection_exercise_id=collection_exercise_id,
             )
@@ -70,4 +70,10 @@ class ResponseDashboard(Resource):
             }
             return jsonify(response)
         except NoDataException:
+            logger.info(
+                "No samples found for exercise, either exercise only has "
+                "reporting units starting with 1111 or exercise doesn't exist.",
+                survey_id=survey_id,
+                collection_exercise_id=collection_exercise_id,
+            )
             abort(404, "Invalid collection exercise or survey ID")
