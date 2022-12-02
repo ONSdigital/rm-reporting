@@ -10,7 +10,8 @@ class Config(object):
     SECURITY_USER_NAME = os.getenv("SECURITY_USER_NAME")
     SECURITY_USER_PASSWORD = os.getenv("SECURITY_USER_PASSWORD")
     BASIC_AUTH = (SECURITY_USER_NAME, SECURITY_USER_PASSWORD)
-    DATABASE_URI = os.getenv("DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/ras")
+    CASE_DATABASE_URI = os.getenv("CASE_DATABASE_URI", "postgresql://postgres:postgres@127.0.0.1:5432/ras")
+    PARTY_DATABASE_URI = os.getenv("PARTY_DATABASE_URI", "postgresql://postgres:postgres@127.0.0.1:5432/ras")
     GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
 
 

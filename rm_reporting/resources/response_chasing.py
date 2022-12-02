@@ -1,16 +1,14 @@
-import csv
 import io
 import logging
-from datetime import datetime
 
 from flask import make_response
-from flask_restx import Resource
+from flask_restx import Resource, abort
 from openpyxl import Workbook
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
 
-from rm_reporting import app, response_chasing_api
+from rm_reporting import response_chasing_api
+from rm_reporting.common.validators import parse_uuid
+from rm_reporting.controllers import case_controller, party_controller
 
 logger = wrap_logger(logging.getLogger(__name__))
 
@@ -19,149 +17,115 @@ logger = wrap_logger(logging.getLogger(__name__))
 class ResponseChasingDownload(Resource):
     @staticmethod
     def get(collection_exercise_id, survey_id):
+        if not parse_uuid(survey_id):
+            logger.info("Responses dashboard endpoint received malformed survey ID", survey_id=survey_id)
+            abort(400, "Malformed survey ID")
+
+        if not parse_uuid(collection_exercise_id):
+            logger.info(
+                "Responses dashboard endpoint received malformed collection exercise ID",
+                collection_exercise_id=collection_exercise_id,
+            )
+            abort(400, "Malformed collection exercise ID")
 
         output = io.BytesIO()
-        wb = Workbook()
-        ws = wb.active
+        # A write_only workbook is a lot more performant at writing a large amount of data if you don't mind giving up
+        # some functionality.  We're not reading or doing anything fancy with this spreadsheet as we make it, so it's
+        # functionally no different.
+        wb = Workbook(write_only=True)
+        ws = wb.create_sheet()
         ws.title = "Response Chasing Report"
 
-        # Set headers
-        headers = {
-            "A1": "Survey Status",
-            "B1": "Reporting Unit Ref",
-            "C1": "Reporting Unit Name",
-            "D1": "Enrolment Status",
-            "E1": "Respondent Name",
-            "F1": "Respondent Telephone",
-            "G1": "Respondent Email",
-            "H1": "Respondent Account Status",
-        }
+        headers = [
+            "Survey Status",
+            "Reporting Unit Ref",
+            "Reporting Unit Name",
+            "Enrolment Status",
+            "Respondent Name",
+            "Respondent Telephone",
+            "Respondent Email",
+            "Respondent Account Status",
+        ]
+        ws.append(headers)
 
-        for cell, header in headers.items():
-            ws[cell] = header
-            ws.column_dimensions[cell[0]].width = len(header)
+        # Get case data (and list of ru_refs and business_ids)
+        case_result = case_controller.get_case_data(collection_exercise_id)
 
-        engine = app.db.engine
+        # Get all the party_ids for all the businesses that are part of the collection exercise
+        business_ids_string = case_controller.get_business_ids_from_case_data(case_result)
 
-        collex_status = (
-            "WITH "
-            "business_details AS "
-            "(SELECT DISTINCT "
-            "ba.collection_exercise As collection_exercise_uuid, "
-            "b.business_ref AS sample_unit_ref, "
-            "ba.business_id AS business_party_uuid, "
-            "ba.attributes->> 'name' AS business_name "
-            "FROM "
-            "partysvc.business_attributes ba, partysvc.business b "
-            "WHERE "
-            f"ba.collection_exercise = '{collection_exercise_id}' and "
-            "ba.business_id = b.party_uuid), "
-            "case_details AS "
-            "(SELECT "
-            "cg.collection_exercise_id AS collection_exercise_uuid, cg.sample_unit_ref, "
-            "cg.status AS case_status "
-            "FROM casesvc.casegroup cg "
-            f"WHERE cg.collection_exercise_id = '{collection_exercise_id}' "
-            "ORDER BY cg.status, cg.sample_unit_ref), "
-            "respondent_details AS "
-            "(SELECT e.survey_id AS survey_uuid, e.business_id AS business_party_uuid, "
-            "e.status AS enrolment_status, "
-            "CONCAT(r.first_name, ' ', r.last_name) AS respondent_name, r.telephone, "
-            "r.email_address, r.status AS respondent_status "
-            "FROM partysvc.enrolment e "
-            "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id "
-            "WHERE "
-            f"e.survey_id = '{survey_id}') "
-            "SELECT cd.case_status, bd.sample_unit_ref, bd.business_name, "
-            "rd.enrolment_status, rd.respondent_name, "
-            "rd.telephone, rd.email_address, rd.respondent_status "
-            "FROM "
-            "case_details cd "
-            "LEFT JOIN business_details bd ON bd.sample_unit_ref=cd.sample_unit_ref "
-            "LEFT JOIN respondent_details rd ON bd.business_party_uuid = rd.business_party_uuid "
-            "ORDER BY sample_unit_ref, case_status;"
+        # Get the attribute data for all the businesses in this collection exercise
+        attributes_result = party_controller.get_attribute_data(collection_exercise_id)
+
+        # Get all the respondents that are enrolled for all the businesses for this survey
+        enrolment_details_result = party_controller.get_enrolment_data(survey_id, business_ids_string)
+        formatted_enrolment_details_result = party_controller.format_enrolment_data(enrolment_details_result)
+        respondent_ids_string = party_controller.get_respondent_ids_from_enrolment_data(enrolment_details_result)
+
+        # Resolve all the respondent party_ids into useful data (names, email, etc)
+        respondent_details_result = party_controller.get_respondent_data(respondent_ids_string)
+
+        # Loop over all the cases, filling in the blanks along the way and add each row to the spreadsheet
+        logger.info(
+            "About to loop over all the cases", survey_id=survey_id, collection_exercise_id=collection_exercise_id
         )
-        try:
-            collex_details = engine.execute(text(collex_status))
-        except SQLAlchemyError:
-            logger.exception("SQL Alchemy query failed")
-            raise
+        for row in case_result:
+            survey_status = getattr(row, "status")
+            ru_ref = getattr(row, "sample_unit_ref")
+            attribute_data = attributes_result[str(getattr(row, "party_id"))]
+            ru_name = getattr(attribute_data, "business_name")
 
-        for row in collex_details:
-            business = [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]]
-            ws.append(business)
+            # Create a row in the spreadsheet for each enrolment for this survey in the business
+            business_enrolments = formatted_enrolment_details_result.get(str(getattr(row, "party_id")), [])
+            enrolment_count_for_business = 0
+            for enrolment in business_enrolments:
+                respondent_details = respondent_details_result[str(getattr(enrolment, "respondent_id"))]
 
+                enrolment_status = getattr(enrolment, "status")
+                respondent_name = (
+                    getattr(respondent_details, "first_name") + " " + getattr(respondent_details, "last_name")
+                )
+                respondent_telephone = getattr(respondent_details, "telephone")
+                respondent_email = getattr(respondent_details, "email_address")
+                respondent_account_status = getattr(respondent_details, "status")
+
+                business = [
+                    survey_status,
+                    ru_ref,
+                    ru_name,
+                    enrolment_status,
+                    respondent_name,
+                    respondent_telephone,
+                    respondent_email,
+                    respondent_account_status,
+                ]
+                ws.append(business)
+                enrolment_count_for_business += 1
+
+            # If there are no enrolments for the business, we still need to report on it
+            if enrolment_count_for_business == 0:
+                business = [
+                    survey_status,
+                    ru_ref,
+                    ru_name,
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                ]
+                ws.append(business)
+        logger.info(
+            "Finished looping over cases. Saving spreadsheet",
+            survey_id=survey_id,
+            collection_exercise_id=collection_exercise_id,
+        )
         wb.active = 1
         wb.save(output)
         wb.close()
+        logger.info("Finished saving spreadsheet", survey_id=survey_id, collection_exercise_id=collection_exercise_id)
 
         response = make_response(output.getvalue(), 200)
         response.headers["Content-Disposition"] = f"attachment; filename=response_chasing_{collection_exercise_id}.xlsx"
         response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        return response
-
-
-@response_chasing_api.route("/download-social-mi/<collection_exercise_id>")
-class SocialMIDownload(Resource):
-    @staticmethod
-    def get(collection_exercise_id):
-        output = io.StringIO()
-
-        # Set headers
-        headers = [
-            "Sample Reference",
-            "Status",
-            "Status Event",
-            "Address Line 1",
-            "Address Line 2",
-            "Locality",
-            "Town Name",
-            "Postcode",
-            "Country",
-        ]
-
-        datestr = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-
-        engine = app.db.engine
-
-        case_status = text(
-            "SELECT cg.sampleunitref, cg.status, "
-            "(SELECT cat.shortdescription "
-            "FROM casesvc.caseevent ce "
-            "JOIN casesvc.category cat "
-            "ON ce.categoryfk = cat.categorypk "
-            "WHERE ce.casefk = c.casepk "
-            "AND cat.shortdescription ~ '^[[:digit:]]*$' "
-            "ORDER BY ce.createddatetime DESC LIMIT 1), "
-            "attributes->> 'ADDRESS_LINE1' AS address_line_1, "
-            "attributes->> 'ADDRESS_LINE2' AS address_line_2, "
-            "attributes->> 'LOCALITY' AS locality, "
-            "attributes->> 'TOWN_NAME' AS town_name, "
-            "attributes->> 'POSTCODE' AS postcode, "
-            "attributes->> 'COUNTRY' AS country "
-            "FROM casesvc.case c "
-            "JOIN casesvc.casegroup cg "
-            "ON c.casegroupfk = cg.casegrouppk "
-            "JOIN samplesvc.sampleattributes sa "
-            "ON CONCAT(attributes->> 'TLA', '' , attributes->> 'REFERENCE') = cg.sampleunitref "
-            "WHERE c.sampleunittype = 'H' AND cg.collectionexerciseid = :collection_exercise_id"
-        )
-
-        try:
-            case_details = engine.execute(case_status, collection_exercise_id=collection_exercise_id)
-        except SQLAlchemyError:
-            logger.exception("SQL Alchemy query failed")
-            raise
-
-        my_data = [headers]
-        my_data.extend(case_details)
-
-        writer = csv.writer(output)
-        writer.writerows(my_data)
-
-        response = make_response(output.getvalue(), 200)
-        response.headers["Content-Disposition"] = (
-            f"attachment; filename=social_mi_report_{collection_exercise_id}" f"_{datestr}.csv"
-        )
-        response.headers["Content-type"] = "text/csv"
         return response
