@@ -1,7 +1,7 @@
 class Row(object):
     """
     This is going represent a row returned from SqlAlchemy.  It's not a true representation, but creating a LegacyRow
-    in a matching format is incredibly difficult.  We'll just the attributes that we need against it, and then it
+    in a matching format is incredibly difficult.  We'll just set the attributes that we need against it, and then it
     becomes a close enough approximation.
 
     This object can be instantiated with any arbitrary attributes for easy setup.  For example:
