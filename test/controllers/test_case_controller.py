@@ -15,6 +15,7 @@ class TestCaseController(TestCase):
     def test_get_all_business_ids_for_collection_exercise(self, mock_engine):
         row_1, row_2 = self._generate_2_case_data_party_id_only_rows()
         mock_engine.engine.execute().all.return_value = [row_1, row_2]
+
         expected_output = "'a9f91050-cd3e-4d29-a14d-67995194fc50', '71507170-4090-4f73-bd86-224431e11d3e'"
         test_output = case_controller.get_all_business_ids_for_collection_exercise(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
@@ -23,6 +24,7 @@ class TestCaseController(TestCase):
         row_1 = Row(party_id=UUID("baefaaef-a2fa-48bc-a2c0-2d58e202253d"))
         row_2 = Row(party_id=UUID("03abc990-4e0f-459e-a3ca-d505fda19299"))
         row_3 = Row(party_id=UUID("e2163f5c-c972-435e-8127-5845a4176358"))
+
         expected_output = (
             "'baefaaef-a2fa-48bc-a2c0-2d58e202253d', "
             "'03abc990-4e0f-459e-a3ca-d505fda19299', "
@@ -36,6 +38,7 @@ class TestCaseController(TestCase):
     def test_get_case_data(self, mock_engine):
         row_1, row_2 = self._generate_2_case_data_rows()
         mock_engine.engine.execute().all.return_value = [row_1, row_2]
+
         expected_output = [row_1, row_2]
         test_output = case_controller.get_case_data(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
@@ -48,6 +51,7 @@ class TestCaseController(TestCase):
         setattr(row_1, "In Progress", 5)
         setattr(row_1, "Complete", 15)
         mock_engine.engine.execute().all.return_value = [row_1]
+
         expected_output = [row_1]
         test_output = case_controller.get_exercise_completion_stats(EXERCISE_ID)
         self.assertEqual(getattr(expected_output[0], "Sample Size"), getattr(test_output[0], "Sample Size"))
