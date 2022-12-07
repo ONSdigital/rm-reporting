@@ -1,6 +1,6 @@
 class Row(object):
     """
-    This is going represent a row returned from SqlAlchemy.  It's not a true representation, but creating a LegacyRow
+    This represents a row returned from SqlAlchemy.  It's not a true representation, but creating a LegacyRow
     in a matching format is incredibly difficult.  We'll just set the attributes that we need against it, and then it
     becomes a close enough approximation.
 

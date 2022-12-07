@@ -4,10 +4,10 @@ from uuid import UUID
 
 from rm_reporting.controllers import case_controller
 
-exercise_id = "b24a9fd7-0b0d-465f-acf6-cfb8c64e8dfd"
+EXERCISE_ID = "b24a9fd7-0b0d-465f-acf6-cfb8c64e8dfd"
 
-business_1_id = UUID("a9f91050-cd3e-4d29-a14d-67995194fc50")
-business_2_id = UUID("71507170-4090-4f73-bd86-224431e11d3e")
+BUSINESS_1_ID = UUID("a9f91050-cd3e-4d29-a14d-67995194fc50")
+BUSINESS_2_ID = UUID("71507170-4090-4f73-bd86-224431e11d3e")
 
 
 class TestCaseController(TestCase):
@@ -16,7 +16,7 @@ class TestCaseController(TestCase):
         row_1, row_2 = self._generate_2_case_data_party_id_only_rows()
         mock_engine.engine.execute().all.return_value = [row_1, row_2]
         expected_output = "'a9f91050-cd3e-4d29-a14d-67995194fc50', '71507170-4090-4f73-bd86-224431e11d3e'"
-        test_output = case_controller.get_all_business_ids_for_collection_exercise(exercise_id)
+        test_output = case_controller.get_all_business_ids_for_collection_exercise(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
 
     def test_get_business_ids_from_case_data(self):
@@ -37,7 +37,7 @@ class TestCaseController(TestCase):
         row_1, row_2 = self._generate_2_case_data_rows()
         mock_engine.engine.execute().all.return_value = [row_1, row_2]
         expected_output = [row_1, row_2]
-        test_output = case_controller.get_case_data(exercise_id)
+        test_output = case_controller.get_case_data(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
 
     @mock.patch("rm_reporting.app.case_db")
@@ -49,7 +49,7 @@ class TestCaseController(TestCase):
         setattr(row_1, "Complete", 15)
         mock_engine.engine.execute().all.return_value = [row_1]
         expected_output = [row_1]
-        test_output = case_controller.get_exercise_completion_stats(exercise_id)
+        test_output = case_controller.get_exercise_completion_stats(EXERCISE_ID)
         self.assertEqual(getattr(expected_output[0], "Sample Size"), getattr(test_output[0], "Sample Size"))
         self.assertEqual(getattr(expected_output[0], "Not Started"), getattr(test_output[0], "Not Started"))
         self.assertEqual(getattr(expected_output[0], "In Progress"), getattr(test_output[0], "In Progress"))
@@ -57,12 +57,12 @@ class TestCaseController(TestCase):
 
     @staticmethod
     def _generate_2_case_data_rows() -> tuple[Row, Row]:
-        row_1 = Row(party_id=business_1_id, sample_unit_ref="49901111111", status="NOTSTARTED")
-        row_2 = Row(party_id=business_2_id, sample_unit_ref="49901111112", status="COMPLETED")
+        row_1 = Row(party_id=BUSINESS_1_ID, sample_unit_ref="49901111111", status="NOTSTARTED")
+        row_2 = Row(party_id=BUSINESS_2_ID, sample_unit_ref="49901111112", status="COMPLETED")
         return row_1, row_2
 
     @staticmethod
     def _generate_2_case_data_party_id_only_rows() -> tuple[Row, Row]:
-        row_1 = Row(party_id=business_1_id)
-        row_2 = Row(party_id=business_2_id)
+        row_1 = Row(party_id=BUSINESS_1_ID)
+        row_2 = Row(party_id=BUSINESS_2_ID)
         return row_1, row_2
