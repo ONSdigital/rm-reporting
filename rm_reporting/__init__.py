@@ -1,7 +1,7 @@
 import logging
 import os
 
-from flask import Flask, _app_ctx_stack
+from flask import Flask
 from flask_cors import CORS
 from flask_restx import Api, Namespace
 from sqlalchemy import create_engine
@@ -16,11 +16,8 @@ def initialise_db(app):
 
 
 def create_connection(db_connection_uri):
-    def current_request():
-        return _app_ctx_stack.__ident_func__()
-
     engine = create_engine(db_connection_uri, echo=True)
-    session = scoped_session(sessionmaker(), scopefunc=current_request)
+    session = scoped_session(sessionmaker())
     session.configure(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
     engine.session = session
     return engine
