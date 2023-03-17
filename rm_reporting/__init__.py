@@ -16,7 +16,7 @@ def initialise_db(app):
 
 
 def create_connection(db_connection_uri):
-    engine = create_engine(db_connection_uri, echo=True)
+    engine = create_engine(db_connection_uri)
     session = scoped_session(sessionmaker())
     session.configure(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
     engine.session = session

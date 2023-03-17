@@ -44,7 +44,6 @@ class TestResponseDashboard(TestCase):
 
     @mock.patch("rm_reporting.controllers.case_controller.get_exercise_completion_stats")
     def test_dashboard_report_invalid_id(self, mock_function):
-
         returned_row = Row()
         setattr(returned_row, "Sample Size", 0)
         setattr(returned_row, "In Progress", 0)
