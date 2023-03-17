@@ -29,7 +29,7 @@ def get_attribute_data(collection_exercise_id: str) -> dict[str, list]:
     )
     logger.info("About to get party attributes")
     with party_engine.begin() as conn:
-        attributes_result = conn.execute(attributes, {"collection_exercise_id": collection_exercise_id}).all()
+        attributes_result = conn.execute(text(attributes), {"collection_exercise_id": collection_exercise_id}).all()
     result_dict = {str(getattr(item, "business_party_uuid")): item for item in attributes_result}
     logger.info("Got party attributes", collection_exercise_id=collection_exercise_id)
     return result_dict
