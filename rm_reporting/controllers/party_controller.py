@@ -28,7 +28,8 @@ def get_attribute_data(collection_exercise_id: str) -> dict[str, list]:
         f"ba.collection_exercise = '{collection_exercise_id}'"
     )
     logger.info("About to get party attributes")
-    attributes_result = party_engine.execute(attributes, collection_exercise_id=collection_exercise_id).all()
+    with party_engine.begin() as conn:
+        attributes_result = conn.execute(attributes, {"collection_exercise_id": collection_exercise_id}).all()
     result_dict = {str(getattr(item, "business_party_uuid")): item for item in attributes_result}
     logger.info("Got party attributes", collection_exercise_id=collection_exercise_id)
     return result_dict
@@ -58,7 +59,8 @@ def get_enrolment_data(survey_id: str, business_ids: str) -> list:
 
     enrolment_details_query = text(enrolment_details_query_text)
     logger.info("About to get enrolment details")
-    enrolment_details_result = party_engine.execute(enrolment_details_query, survey_id=survey_id).all()
+    with party_engine.begin() as conn:
+        enrolment_details_result = conn.execute(enrolment_details_query, {"survey_id": survey_id}).all()
     return enrolment_details_result
 
 
@@ -105,7 +107,8 @@ def get_respondent_data(respondent_ids_string) -> dict:
 
     party_engine = app.party_db.engine
     respondent_details_query = text(f"SELECT * FROM partysvc.respondent r WHERE r.id IN ({respondent_ids_string}) ")
-    respondent_details_result = party_engine.execute(respondent_details_query).all()
+    with party_engine.begin() as conn:
+        respondent_details_result = conn.execute(respondent_details_query).all()
     results_dict = {str(getattr(item, "id")): item for item in respondent_details_result}
     logger.info("Got respondent data")
     return results_dict
