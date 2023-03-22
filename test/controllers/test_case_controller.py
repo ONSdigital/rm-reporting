@@ -14,7 +14,8 @@ class TestCaseController(TestCase):
     @mock.patch("rm_reporting.app.case_db")
     def test_get_all_business_ids_for_collection_exercise(self, mock_engine):
         row_1, row_2 = self._generate_2_case_data_party_id_only_rows()
-        mock_engine.engine.execute().all.return_value = [row_1, row_2]
+        # Mocking __enter__() lets you mock when using the context manager
+        mock_engine.engine.begin().__enter__().execute().all.return_value = [row_1, row_2]
 
         expected_output = "'a9f91050-cd3e-4d29-a14d-67995194fc50', '71507170-4090-4f73-bd86-224431e11d3e'"
         test_output = case_controller.get_all_business_ids_for_collection_exercise(EXERCISE_ID)
@@ -37,7 +38,7 @@ class TestCaseController(TestCase):
     @mock.patch("rm_reporting.app.case_db")
     def test_get_case_data(self, mock_engine):
         row_1, row_2 = self._generate_2_case_data_rows()
-        mock_engine.engine.execute().all.return_value = [row_1, row_2]
+        mock_engine.engine.begin().__enter__().execute().all.return_value = [row_1, row_2]
 
         expected_output = [row_1, row_2]
         test_output = case_controller.get_case_data(EXERCISE_ID)
@@ -50,7 +51,7 @@ class TestCaseController(TestCase):
         setattr(row_1, "Not Started", 80)
         setattr(row_1, "In Progress", 5)
         setattr(row_1, "Complete", 15)
-        mock_engine.engine.execute().all.return_value = [row_1]
+        mock_engine.engine.begin().__enter__().execute().all.return_value = [row_1]
 
         expected_output = [row_1]
         test_output = case_controller.get_exercise_completion_stats(EXERCISE_ID)

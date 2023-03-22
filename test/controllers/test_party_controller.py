@@ -28,7 +28,8 @@ class TestPartyController(TestCase):
     def test_get_attribute_data(self, mock_engine):
         row_1 = Row(collection_exercise_uuid=EXERCISE_ID, business_party_uuid=BUSINESS_1_ID, business_name="First ltd")
         row_2 = Row(collection_exercise_uuid=EXERCISE_ID, business_party_uuid=BUSINESS_2_ID, business_name="2nd ltd")
-        mock_engine.engine.execute().all.return_value = [row_1, row_2]
+        # Mocking __enter__() lets you mock when using the context manager
+        mock_engine.engine.begin().__enter__().execute().all.return_value = [row_1, row_2]
 
         expected_output = {str(BUSINESS_1_ID): row_1, str(BUSINESS_2_ID): row_2}
         test_output = party_controller.get_attribute_data(EXERCISE_ID)
@@ -37,7 +38,7 @@ class TestPartyController(TestCase):
     @mock.patch("rm_reporting.app.party_db")
     def test_get_enrolment_data(self, mock_engine):
         row_1, row_2, row_3 = self._generate_3_enrolment_data_rows()
-        mock_engine.engine.execute().all.return_value = [row_1, row_2, row_3]
+        mock_engine.engine.begin().__enter__().execute().all.return_value = [row_1, row_2, row_3]
 
         expected_output = [row_1, row_2, row_3]
         business_ids = f"{BUSINESS_1_ID}, {BUSINESS_2_ID}"
@@ -67,7 +68,7 @@ class TestPartyController(TestCase):
     @mock.patch("rm_reporting.app.party_db")
     def test_get_respondent_data(self, mock_engine):
         row_1, row_2 = self._generate_2_respondent_data_rows()
-        mock_engine.engine.execute().all.return_value = [row_1, row_2]
+        mock_engine.engine.begin().__enter__().execute().all.return_value = [row_1, row_2]
 
         expected_output = {"1": row_1, "2": row_2}
         respondent_ids = f"{RESPONDENT_1_ID}, {RESPONDENT_2_ID}"
