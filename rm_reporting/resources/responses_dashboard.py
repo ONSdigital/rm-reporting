@@ -1,116 +1,79 @@
 import logging
 from datetime import datetime
 
-from flask import Response, json
+from flask import jsonify
 from flask_restx import Resource, abort
-from sqlalchemy import text
 from structlog import wrap_logger
 
-from rm_reporting import app, response_dashboard_api
+from rm_reporting import response_dashboard_api
 from rm_reporting.common.validators import parse_uuid
+from rm_reporting.controllers import case_controller, party_controller
 from rm_reporting.exceptions import NoDataException
 
 logger = wrap_logger(logging.getLogger(__name__))
 
 
-def get_report_figures(survey_id, collection_exercise_id, engine):
-    case_query = text(
-        "WITH "
-        "case_figures AS "
-        '(SELECT COUNT(*) AS "Sample Size", '
-        "COUNT(CASE WHEN status = 'NOTSTARTED' THEN 1 ELSE NULL END) AS \"Not Started\", "
-        "COUNT(CASE WHEN status = 'INPROGRESS' THEN 1 ELSE NULL END) AS \"In Progress\", "
-        "COUNT(CASE WHEN status = 'COMPLETE' THEN 1 ELSE NULL END) AS \"Complete\" "
-        "FROM casesvc.casegroup "
-        "WHERE collection_exercise_id = :collection_exercise_id "
-        "AND sample_unit_ref NOT LIKE '1111%'), "
-        "business_details AS "
-        "(SELECT DISTINCT "
-        "b.business_ref AS sample_unit_ref, "
-        "ba.business_id AS business_party_uuid "
-        "FROM "
-        "partysvc.business_attributes ba, partysvc.business b "
-        "WHERE "
-        "ba.collection_exercise = :collection_exercise_id and "
-        "ba.business_id = b.party_uuid and "
-        "b.business_ref NOT LIKE '1111%'), "
-        "case_details AS "
-        "(select sample_unit_ref "
-        "FROM casesvc.casegroup "
-        "WHERE collection_exercise_id = :collection_exercise_id and "
-        "sample_unit_ref NOT LIKE '1111%'), "
-        "respondent_details AS "
-        "(SELECT e.business_id AS business_party_uuid, "
-        "e.status AS enrolment_status "
-        "FROM partysvc.enrolment e "
-        "LEFT JOIN partysvc.respondent r ON e.respondent_id = r.id "
-        "WHERE "
-        "e.survey_id = :survey_id), "
-        "survey_enrolments AS "
-        "(SELECT "
-        "rd.enrolment_status as status "
-        "FROM "
-        "case_details cd "
-        "LEFT JOIN business_details bd ON bd.sample_unit_ref=cd.sample_unit_ref "
-        "LEFT JOIN respondent_details rd ON bd.business_party_uuid = rd.business_party_uuid), "
-        "party_figures AS "
-        "(SELECT COUNT(CASE WHEN survey_enrolments.status = 'ENABLED' THEN 1 ELSE NULL END) AS \"Total Enrolled\", "
-        "COUNT(CASE WHEN survey_enrolments.status = 'PENDING' THEN 1 ELSE NULL END) AS \"Total Pending\" "
-        "FROM survey_enrolments) "
-        "SELECT * FROM case_figures, party_figures"
-    )
+def get_report_figures(survey_id, collection_exercise_id):
+    logger.info("Getting report figures", survey_id=survey_id, collection_exercise_id=collection_exercise_id)
+    result_dict = {}
 
-    report_figures = engine.execute(
-        case_query, survey_id=survey_id, collection_exercise_id=collection_exercise_id
-    ).first()
-
-    if any(column is None for column in report_figures.values()):
+    # Get all cases for a collection exercise
+    case_result = case_controller.get_exercise_completion_stats(collection_exercise_id)
+    if getattr(case_result[0], "Sample Size") == 0:
         raise NoDataException
+    result_dict["sampleSize"] = getattr(case_result[0], "Sample Size")
+    result_dict["inProgress"] = getattr(case_result[0], "In Progress")
+    result_dict["notStarted"] = getattr(case_result[0], "Not Started")
+    result_dict["completed"] = getattr(case_result[0], "Complete")
 
-    return report_figures
+    # Get all the party_ids for all the businesses that are part of the collection exercise
+    business_ids = case_controller.get_all_business_ids_for_collection_exercise(collection_exercise_id)
 
+    # Get all the enrolments for the survey the exercise is for but only for the businesses
+    enrolment_details_result = party_controller.get_enrolment_data(survey_id, business_ids)
 
-def get_report(survey_id, collection_exercise_id, engine):
-    report_figures = get_report_figures(survey_id, collection_exercise_id, engine)
+    pending = 0
+    enabled = 0
+    for row in enrolment_details_result:
+        if getattr(row, "status") == "ENABLED":
+            enabled += 1
+        if getattr(row, "status") == "PENDING":
+            pending += 1
 
-    return {
-        "inProgress": report_figures["In Progress"],
-        "accountsPending": report_figures["Total Pending"],
-        "accountsEnrolled": report_figures["Total Enrolled"],
-        "notStarted": report_figures["Not Started"],
-        "completed": report_figures["Complete"],
-        "sampleSize": report_figures["Sample Size"],
-    }
+    result_dict["accountsPending"] = pending
+    result_dict["accountsEnrolled"] = enabled
+
+    logger.info("Successfully got report figures", survey_id=survey_id, collection_exercise_id=collection_exercise_id)
+    return result_dict
 
 
 @response_dashboard_api.route("/survey/<survey_id>/collection-exercise/<collection_exercise_id>")
 class ResponseDashboard(Resource):
     @staticmethod
     def get(survey_id, collection_exercise_id):
-
-        engine = app.db.engine
-
-        parsed_survey_id = parse_uuid(survey_id)
-        if not parsed_survey_id:
-            logger.debug("Responses dashboard endpoint received malformed survey ID", invalid_survey_id=survey_id)
+        if not parse_uuid(survey_id):
+            logger.info("Responses dashboard endpoint received malformed survey ID", survey_id=survey_id)
             abort(400, "Malformed survey ID")
 
-        parsed_collection_exercise_id = parse_uuid(collection_exercise_id)
-        if not parsed_collection_exercise_id:
-            logger.debug(
+        if not parse_uuid(collection_exercise_id):
+            logger.info(
                 "Responses dashboard endpoint received malformed collection exercise ID",
-                invalid_collection_exercise_id=collection_exercise_id,
+                collection_exercise_id=collection_exercise_id,
             )
             abort(400, "Malformed collection exercise ID")
 
         try:
-            report = get_report(parsed_survey_id, parsed_collection_exercise_id, engine)
+            report = get_report_figures(survey_id, collection_exercise_id)
+            response = {
+                "metadata": {"timeUpdated": datetime.now().timestamp(), "collectionExerciseId": collection_exercise_id},
+                "report": report,
+            }
+            return jsonify(response)
         except NoDataException:
+            logger.info(
+                "No samples found for exercise, either exercise only has "
+                "reporting units starting with 1111 or exercise doesn't exist.",
+                survey_id=survey_id,
+                collection_exercise_id=collection_exercise_id,
+            )
             abort(404, "Invalid collection exercise or survey ID")
-
-        response = {
-            "metadata": {"timeUpdated": datetime.now().timestamp(), "collectionExerciseId": collection_exercise_id},
-            "report": report,
-        }
-
-        return Response(json.dumps(response), content_type="application/json")

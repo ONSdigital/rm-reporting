@@ -39,7 +39,7 @@ spec:
         - name: cloudsql-proxy
           image: gcr.io/cloudsql-docker/gce-proxy:1.32.0
           command: ["/cloud_sql_proxy",
-                    "-instances=$(SQL_INSTANCE_NAME)=tcp:$(DB_PORT)",
+                    "-instances=$(READ_REPLICA_INSTANCE_NAME)=tcp:$(DB_PORT)",
                     "-ip_address_types=PRIVATE",
                     "-credential_file=/secrets/cloudsql/credentials.json"]
           securityContext:
@@ -50,11 +50,11 @@ spec:
               mountPath: /secrets/cloudsql
               readOnly: true
           env:
-          - name: SQL_INSTANCE_NAME
+          - name: READ_REPLICA_INSTANCE_NAME
             valueFrom:
               configMapKeyRef:
                 name: cloudsql-proxy-config
-                key: reporting-connection-name
+                key: replica-connection-name
           - name: DB_PORT
             valueFrom:
               secretKeyRef:
@@ -108,21 +108,6 @@ spec:
               secretKeyRef:
                 name: db-config
                 key: db-port
-          - name: DB_NAME
-            valueFrom:
-              secretKeyRef:
-                name: db-config
-                key: {{ .Values.database.secrets.nameKey }}
-          - name: DB_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: db-credentials
-                key: {{ .Values.database.secrets.usernameKey }}
-          - name: DB_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: db-credentials
-                key: {{ .Values.database.secrets.passwordKey }}
           - name: SECURITY_USER_NAME
             valueFrom:
               secretKeyRef:
@@ -135,12 +120,50 @@ spec:
                 key: security-password
           - name: PORT
             value: "{{ .Values.container.port }}"
-          - name: DATABASE_URI
+          - name: CASE_DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: db-config
+                key: {{ .Values.database.secrets.caseNameKey }}
+          - name: CASE_DB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: {{ .Values.database.secrets.caseUserNameKey }}
+          - name: CASE_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: {{ .Values.database.secrets.casePasswordKey }}
+          - name: CASE_DATABASE_URI
             {{- if .Values.database.sqlProxyEnabled }}
-            value: "postgresql://$(DB_USERNAME):$(DB_PASSWORD)@127.0.0.1:$(DB_PORT)/$(DB_NAME)"
+            value: "postgresql://$(CASE_DB_USERNAME):$(CASE_DB_PASSWORD)@127.0.0.1:$(DB_PORT)/$(CASE_DB_NAME)"
             {{- else }}
-            value: "postgresql://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+            value: "postgresql://$(CASE_DB_USERNAME):$(CASE_DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(CASE_DB_NAME)"
             {{- end }}
+          - name: PARTY_DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: db-config
+                key: {{ .Values.database.secrets.partyNameKey }}
+          - name: PARTY_DB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: {{ .Values.database.secrets.partyUserNameKey }}
+          - name: PARTY_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: {{ .Values.database.secrets.partyPasswordKey }}
+          - name: PARTY_DATABASE_URI
+            {{- if .Values.database.sqlProxyEnabled }}
+            value: "postgresql://$(PARTY_DB_USERNAME):$(PARTY_DB_PASSWORD)@127.0.0.1:$(DB_PORT)/$(PARTY_DB_NAME)"
+            {{- else }}
+            value: "postgresql://$(PARTY_DB_USERNAME):$(PARTY_DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(PARTY_DB_NAME)"
+            {{- end }}
+
+
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/credentials.json
           resources:

@@ -14,10 +14,6 @@ GET request to this endpoint displays the name of the service and its version nu
 * `collection_exercise_id` is the ID of the collection exercise.
 * `survey_id` is the ID of the survey.
 
-`/reporting-api/v1/response-chasing/download-social-mi/<collection_exercise_id>`
-* GET request to this endpoint fetches a social MI report.
-* `collection_exercise_id` is the ID of the collection exercise.
-
 ## Responses dashboard endpoints
 
 `/reporting-api/v1/response-dashboard/survey/<survey_id>/collection-exercise/<collection_exercise_id>`

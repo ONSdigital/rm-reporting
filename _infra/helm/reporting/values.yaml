@@ -14,15 +14,15 @@ service:
 resources:
   application:
     requests:
-      memory: "125Mi"
       cpu: "50m"
+      memory: "125Mi"
     limits:
       cpu: "200m"
       memory: "350Mi"
   proxy:
     requests:
+      cpu: "10m"
       memory: "25Mi"
-      cpu: "5m"
     limits:
       cpu: "100m"
       memory: "256Mi"
@@ -42,6 +42,9 @@ database:
   sqlProxyEnabled: false
   managedPostgres: false
   secrets:
-    usernameKey: username
-    passwordKey: password
-    nameKey: db-name
+    caseUserNameKey: username
+    casePasswordKey: password
+    caseNameKey: db-name
+    partyUserNameKey: username
+    partyPasswordKey: password
+    partyNameKey: db-name

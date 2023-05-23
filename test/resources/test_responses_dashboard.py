@@ -4,19 +4,29 @@ from unittest import TestCase, mock
 from rm_reporting import app
 
 
+class Row(object):
+    """
+    This is going represent a row returned from SqlAlchemy.  It's not a true representation, but creating a LegacyRow
+    in a matching format is incredibly difficult.  We'll just setattr what we need against it, and then it becomes a
+    close enough approximation
+    """
+
+    pass
+
+
 class TestResponseDashboard(TestCase):
     def setUp(self):
         self.test_client = app.test_client()
 
-    @mock.patch("rm_reporting.app.db")
-    def test_dashboard_report_success(self, mock_db):
-        mock_db.engine.execute.return_value.first.return_value = {
-            "Sample Size": 100,
-            "Total Enrolled": 50,
-            "Total Pending": 10,
-            "Not Started": 70,
-            "In Progress": 20,
-            "Complete": 10,
+    @mock.patch("rm_reporting.resources.responses_dashboard.get_report_figures")
+    def test_dashboard_report_success(self, mock_reporting_figures):
+        mock_reporting_figures.return_value = {
+            "sampleSize": 100,
+            "accountsEnrolled": 50,
+            "accountsPending": 10,
+            "notStarted": 70,
+            "inProgress": 20,
+            "completed": 10,
         }
         response = self.test_client.get(
             "/reporting-api/v1/response-dashboard/survey/57586798-74e3-49fd-93da-a782ec5f5129"
@@ -32,16 +42,15 @@ class TestResponseDashboard(TestCase):
         self.assertEqual(20, response_dict["report"]["inProgress"])
         self.assertEqual(70, response_dict["report"]["notStarted"])
 
-    @mock.patch("rm_reporting.app.db")
-    def test_dashboard_report_invalid_id(self, mock_db):
-        mock_db.engine.execute.return_value.first.return_value = {
-            "Sample Size": 100,
-            "Total Enrolled": 50,
-            "Total Pending": 10,
-            "Not Started": 100,
-            "In Progress": 30,
-            "Complete": None,
-        }
+    @mock.patch("rm_reporting.controllers.case_controller.get_exercise_completion_stats")
+    def test_dashboard_report_invalid_id(self, mock_function):
+        returned_row = Row()
+        setattr(returned_row, "Sample Size", 0)
+        setattr(returned_row, "In Progress", 0)
+        setattr(returned_row, "Not Started", 0)
+        setattr(returned_row, "Complete", 0)
+
+        mock_function.return_value = [returned_row]
         response = self.test_client.get(
             "/reporting-api/v1/response-dashboard/survey/57586798-74e3-49fd-93da-a782ec5f5129"
             "/collection-exercise/00000000-0000-0000-0000-000000000000"

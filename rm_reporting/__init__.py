@@ -1,7 +1,7 @@
 import logging
 import os
 
-from flask import Flask, _app_ctx_stack
+from flask import Flask
 from flask_cors import CORS
 from flask_restx import Api, Namespace
 from sqlalchemy import create_engine
@@ -11,15 +11,13 @@ from rm_reporting.logger_config import logger_initial_config
 
 
 def initialise_db(app):
-    app.db = create_connection(app.config["DATABASE_URI"])
+    app.case_db = create_connection(app.config["CASE_DATABASE_URI"])
+    app.party_db = create_connection(app.config["PARTY_DATABASE_URI"])
 
 
 def create_connection(db_connection_uri):
-    def current_request():
-        return _app_ctx_stack.__ident_func__()
-
-    engine = create_engine(db_connection_uri, echo=True)
-    session = scoped_session(sessionmaker(), scopefunc=current_request)
+    engine = create_engine(db_connection_uri)
+    session = scoped_session(sessionmaker())
     session.configure(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
     engine.session = session
     return engine
@@ -49,7 +47,6 @@ api.add_namespace(response_dashboard_api)
 
 from rm_reporting.resources.info import Info  # NOQA
 from rm_reporting.resources.response_chasing import ResponseChasingDownload  # NOQA
-from rm_reporting.resources.response_chasing import SocialMIDownload  # NOQA
 from rm_reporting.resources.responses_dashboard import ResponseDashboard  # NOQA
 
 api.init_app(app)

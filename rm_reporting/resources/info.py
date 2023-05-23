@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from flask import jsonify, make_response
+from flask import jsonify
 from flask_restx import Resource
 
 from rm_reporting import api, app
@@ -22,4 +22,4 @@ class Info(Resource):
         }
         info = dict(_health_check, **info)
 
-        return make_response(jsonify(info), 200)
+        return jsonify(info)
