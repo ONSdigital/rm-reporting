@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import pytest
 
-BUSINESS_ATTRIBUTE = namedtuple("business_attributes", ["ce_id", "party_id", "business_name"])
+BUSINESS_ATTRIBUTE = namedtuple("business_attribute", ["ce_id", "party_id", "business_name"])
 CASE = namedtuple("case", ["party_id", "sample_unit_ref", "status"])
 BUSINESS_ENROLMENT = namedtuple("business_enrolment", ["business_id", "respondent_id", "sample_unit_ref", "status"])
 RESPONDENT = namedtuple(
