@@ -8,7 +8,7 @@ from rm_reporting import app
 logger = wrap_logger(logging.getLogger(__name__))
 
 
-def get_attribute_data(collection_exercise_id: str) -> dict[str, list]:
+def get_business_attributes(collection_exercise_id: str) -> dict[str, list]:
     """
     Queries the attributes table in party to get all the business information for that specific collection exercise
 
@@ -66,6 +66,7 @@ def get_enrolment_data(survey_id: str, business_ids: str) -> list:
 
 def get_respondent_ids_from_enrolment_data(enrolment_details_result: list) -> str:
     respondent_ids_string = ""
+
     for row in enrolment_details_result:
         respondent_ids_string += f"'{str(getattr(row, 'respondent_id'))}', "
 
@@ -87,6 +88,7 @@ def format_enrolment_data(enrolment_details_result: list) -> dict[str, list]:
     :return: A dictionary, keyed by the ru_ref
     """
     resulting_dict = {}
+
     for row in enrolment_details_result:
         business_id = str(getattr(row, "business_id"))
         if resulting_dict.get(business_id) is None:

@@ -1,4 +1,4 @@
-env: minikube
+env: performance
 
 image:
   devRepo: eu.gcr.io/ons-rasrmbs-management
@@ -39,12 +39,15 @@ rollingUpdate:
   maxUnavailable: 1
 
 database:
-  sqlProxyEnabled: false
-  managedPostgres: false
+  sqlProxyEnabled: true
+  managedPostgres: true
   secrets:
-    caseUserNameKey: username
-    casePasswordKey: password
-    caseNameKey: db-name
-    partyUserNameKey: username
-    partyPasswordKey: password
-    partyNameKey: db-name
+    usernameKey: reporting-username
+    passwordKey: reporting-password
+    nameKey: reporting-db-name
+    caseUserNameKey: case-username
+    casePasswordKey: case-password
+    caseNameKey: case-db-name
+    partyUserNameKey: party-username
+    partyPasswordKey: party-password
+    partyNameKey: party-db-name

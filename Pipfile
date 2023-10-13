@@ -1,12 +1,10 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-flask = "*"
+flask = "==2.3.3"
 flask-cors = "*"
 flask-restx = "*"
 gunicorn = "*"
@@ -27,8 +25,7 @@ isort = "*"
 testfixtures = "*"
 pytest-cov = "*"
 coverage= "*"
-
+pytest-mock = "*"
 
 [requires]
-
 python_version = "3.11"

@@ -25,14 +25,14 @@ class TestPartyController(TestCase):
         self.assertEqual(expected_output, test_output)
 
     @mock.patch("rm_reporting.app.party_db")
-    def test_get_attribute_data(self, mock_engine):
+    def test_get_business_attributes(self, mock_engine):
         row_1 = Row(collection_exercise_uuid=EXERCISE_ID, business_party_uuid=BUSINESS_1_ID, business_name="First ltd")
         row_2 = Row(collection_exercise_uuid=EXERCISE_ID, business_party_uuid=BUSINESS_2_ID, business_name="2nd ltd")
         # Mocking __enter__() lets you mock when using the context manager
         mock_engine.engine.begin().__enter__().execute().all.return_value = [row_1, row_2]
 
         expected_output = {str(BUSINESS_1_ID): row_1, str(BUSINESS_2_ID): row_2}
-        test_output = party_controller.get_attribute_data(EXERCISE_ID)
+        test_output = party_controller.get_business_attributes(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
 
     @mock.patch("rm_reporting.app.party_db")
