@@ -37,7 +37,9 @@ class ResponseChasingDownload(Resource):
             response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         elif document_type == "csv":
             response = make_response(create_csv_report(collection_exercise_id, survey_id).getvalue())
-            response.headers["Content-Disposition"] = "attachment; filename=export.csv"
+            response.headers[
+                "Content-Disposition"
+            ] = f"attachment; filename=response_chasing_{collection_exercise_id}.csv"
             response.headers["Content-type"] = "text/csv"
         else:
             abort(400, "Document type not supported")
