@@ -8,7 +8,7 @@ from rm_reporting import app
 logger = wrap_logger(logging.getLogger(__name__))
 
 
-def get_attribute_data(collection_exercise_id: str) -> dict[str, list]:
+def get_business_attributes(collection_exercise_id: str) -> dict[str, list]:
     """
     Queries the attributes table in party to get all the business information for that specific collection exercise
 
