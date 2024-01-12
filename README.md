@@ -42,6 +42,7 @@ curl http://localhost:8084/info
 
 ## Local testing
 
+TODO: Revert after forcing GHA build
 ```bash
 make test
 ```
