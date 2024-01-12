@@ -45,4 +45,3 @@ curl http://localhost:8084/info
 ```bash
 make test
 ```
-TODO: Revert after forcing GHA rebuild
