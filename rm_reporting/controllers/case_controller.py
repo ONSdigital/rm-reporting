@@ -19,10 +19,14 @@ def get_case_data(collection_exercise_id: str) -> list:
     logger.info("About to get case data", collection_exercise_id=collection_exercise_id)
     case_engine = app.case_db.engine
     case_business_ids_query = text(
-        "SELECT party_id, sample_unit_ref, status, change_state_timestamp "
+        "SELECT party_id, sample_unit_ref, status, cast(change_state_timestamp as varchar(30)) "
         "FROM casesvc.casegroup "
-        "WHERE collection_exercise_id = :collection_exercise_id "
-        "ORDER BY sample_unit_ref, status"
+        "WHERE collection_exercise_id = 'a2e47f5c-c517-4fea-ba5b-8b0e991c1c8b' "
+        "ORDER BY sample_unit_ref, status "
+        # "SELECT party_id, sample_unit_ref, status, change_state_timestamp "
+        # "FROM casesvc.casegroup "
+        # "WHERE collection_exercise_id = :collection_exercise_id "
+        # "ORDER BY sample_unit_ref, status"
     )
 
     with case_engine.begin() as conn:
