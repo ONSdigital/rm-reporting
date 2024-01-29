@@ -3,7 +3,7 @@ from collections import namedtuple
 import pytest
 
 BUSINESS_ATTRIBUTE = namedtuple("business_attribute", ["ce_id", "party_id", "business_name"])
-CASE = namedtuple("case", ["party_id", "sample_unit_ref", "status"])
+CASE = namedtuple("case", ["party_id", "sample_unit_ref", "status", "status_change_time"])
 BUSINESS_ENROLMENT = namedtuple("business_enrolment", ["business_id", "respondent_id", "sample_unit_ref", "status"])
 RESPONDENT = namedtuple(
     "respondent",
@@ -14,9 +14,9 @@ RESPONDENT = namedtuple(
 @pytest.fixture()
 def cases():
     return [
-        CASE("20d2eca7-fc2e-408d-88d4-ae841cee728c", "11110000001", "NOTSTARTED"),
-        CASE("10fbbff8-ec3b-4bdb-bdc4-91a415794fb0", "11110000002", "NOTSTARTED"),
-        CASE("77e9ee23-6d52-4e63-b581-699afbb4acca", "11110000003", "NOTSTARTED"),
+        CASE("20d2eca7-fc2e-408d-88d4-ae841cee728c", "11110000001", "NOTSTARTED", "2024-01-29 14:16:02.105 +0000"),
+        CASE("10fbbff8-ec3b-4bdb-bdc4-91a415794fb0", "11110000002", "NOTSTARTED", "2024-01-29 14:16:02.105 +0000"),
+        CASE("77e9ee23-6d52-4e63-b581-699afbb4acca", "11110000003", "NOTSTARTED", "2024-01-29 14:16:02.105 +0000"),
     ]
 
 
@@ -95,6 +95,7 @@ def expected_report_rows():
             "07000000003",
             "test3@ons.gov.uk",
             "ACTIVE",
+            "2024-01-29 14:16:02.105 +0000",
         ],
         ["NOTSTARTED", "11110000002", "Business 2"],
         [
@@ -106,6 +107,7 @@ def expected_report_rows():
             "07000000001",
             "test1@ons.gov.uk",
             "ACTIVE",
+            "2024-01-29 14:16:02.105 +0000",
         ],
         [
             "NOTSTARTED",
@@ -116,5 +118,6 @@ def expected_report_rows():
             "07000000002",
             "test2@ons.gov.uk",
             "CREATED",
+            "2024-01-29 14:16:02.105 +0000",
         ],
     ]
