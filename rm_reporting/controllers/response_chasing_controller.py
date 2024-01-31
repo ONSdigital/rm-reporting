@@ -31,7 +31,7 @@ COLUMN_TITLES = [
     "Respondent Telephone",
     "Respondent Email",
     "Respondent Account Status",
-    "Respondent Account Status Change Time",
+    "Time of Status Change",
 ]
 
 
