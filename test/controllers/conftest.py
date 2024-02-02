@@ -1,4 +1,5 @@
 from collections import namedtuple
+from datetime import datetime
 
 import pytest
 
@@ -14,9 +15,24 @@ RESPONDENT = namedtuple(
 @pytest.fixture()
 def cases():
     return [
-        CASE("20d2eca7-fc2e-408d-88d4-ae841cee728c", "11110000001", "NOTSTARTED", "2024-01-29 14:16:02.105 +0000"),
-        CASE("10fbbff8-ec3b-4bdb-bdc4-91a415794fb0", "11110000002", "NOTSTARTED", "2024-01-29 14:16:02.105 +0000"),
-        CASE("77e9ee23-6d52-4e63-b581-699afbb4acca", "11110000003", "NOTSTARTED", "2024-01-29 14:16:02.105 +0000"),
+        CASE(
+            "20d2eca7-fc2e-408d-88d4-ae841cee728c",
+            "11110000001",
+            "NOTSTARTED",
+            datetime.strptime("2024-01-29 14:16:02.105 +0000", "%Y-%m-%d %H:%M:%S.%f %z"),
+        ),
+        CASE(
+            "10fbbff8-ec3b-4bdb-bdc4-91a415794fb0",
+            "11110000002",
+            "NOTSTARTED",
+            datetime.strptime("2024-01-29 14:16:02.105 +0000", "%Y-%m-%d %H:%M:%S.%f %z"),
+        ),
+        CASE(
+            "77e9ee23-6d52-4e63-b581-699afbb4acca",
+            "11110000003",
+            "NOTSTARTED",
+            datetime.strptime("2024-01-29 14:16:02.105 +0000", "%Y-%m-%d %H:%M:%S.%f %z"),
+        ),
     ]
 
 
