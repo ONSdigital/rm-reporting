@@ -1,4 +1,5 @@
 import csv
+from datetime import datetime
 import io
 import logging
 from typing import IO, Callable
@@ -21,7 +22,6 @@ from rm_reporting.controllers.party_controller import (
 
 logger = wrap_logger(logging.getLogger(__name__))
 
-
 COLUMN_TITLES = [
     "Survey Status",
     "Reporting Unit Ref",
@@ -31,7 +31,7 @@ COLUMN_TITLES = [
     "Respondent Telephone",
     "Respondent Email",
     "Respondent Account Status",
-    "Time of Status Change",
+    "STtatus Change Timestamp",
 ]
 
 
@@ -66,8 +66,11 @@ def _add_report_data(ce_id: UUID, survey_id: UUID, document_object, append_funct
         sample_unit_ref = getattr(case, "sample_unit_ref")
         business_attributes = business_attributes_map[str(getattr(case, "party_id"))]
         business_name = getattr(business_attributes, "business_name")
-        status_change_time = str(getattr(case, "change_state_timestamp"))
+        status_change_timestamp = datetime.strftime(datetime.strptime(getattr(case, "change_state_timestamp"),
+                                                                      "%Y-%m-%d %H:%M:%S.%f %z"), "%Y-%m-%d %H:%M:%S")
+
         respondents_enrolled_for_business = businesses_enrolled_map.get(str(getattr(case, "party_id")), [])
+        print("Datetime: " + str(status_change_timestamp))
 
         if respondents_enrolled_for_business:
             for enrolment in respondents_enrolled_for_business:
@@ -89,7 +92,7 @@ def _add_report_data(ce_id: UUID, survey_id: UUID, document_object, append_funct
                     respondent_telephone,
                     respondent_email,
                     respondent_account_status,
-                    status_change_time,
+                    status_change_timestamp,
                 ]
                 append_function(document_object, row)
         else:

@@ -95,7 +95,7 @@ def expected_report_rows():
             "07000000003",
             "test3@ons.gov.uk",
             "ACTIVE",
-            "2024-01-29 14:16:02.105 +0000",
+            "2024-01-29 14:16:02",
         ],
         ["NOTSTARTED", "11110000002", "Business 2"],
         [
@@ -107,7 +107,7 @@ def expected_report_rows():
             "07000000001",
             "test1@ons.gov.uk",
             "ACTIVE",
-            "2024-01-29 14:16:02.105 +0000",
+            "2024-01-29 14:16:02",
         ],
         [
             "NOTSTARTED",
@@ -118,6 +118,6 @@ def expected_report_rows():
             "07000000002",
             "test2@ons.gov.uk",
             "CREATED",
-            "2024-01-29 14:16:02.105 +0000",
+            "2024-01-29 14:16:02",
         ],
     ]
