@@ -1,5 +1,4 @@
 import csv
-from datetime import datetime
 import io
 import logging
 from typing import IO, Callable
@@ -7,6 +6,8 @@ from uuid import UUID
 
 from openpyxl import Workbook
 from structlog import wrap_logger
+
+from datetime import datetime
 
 from rm_reporting.controllers.case_controller import (
     get_business_ids_from_case_data,
