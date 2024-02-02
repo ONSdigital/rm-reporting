@@ -68,9 +68,9 @@ def _add_report_data(ce_id: UUID, survey_id: UUID, document_object, append_funct
         business_name = getattr(business_attributes, "business_name")
         if getattr(case, "status_change_timestamp"):
             status_change_timestamp = datetime.strftime(
-                datetime.strptime(getattr(case, "status_change_timestamp"), "%Y-%m-%d %H:%M:%S.%f %z"),
-                "%Y-%m-%d %H:%M:%S",
-            )
+                datetime.strptime(str(getattr(case, "status_change_timestamp"), "%Y-%m-%d %H:%M:%S.%f %z"),
+                                  "%Y-%m-%d %H:%M:%S"
+                                  ))
         else:
             status_change_timestamp = ""
 
