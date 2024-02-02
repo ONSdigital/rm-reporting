@@ -67,12 +67,11 @@ def _add_report_data(ce_id: UUID, survey_id: UUID, document_object, append_funct
         business_attributes = business_attributes_map[str(getattr(case, "party_id"))]
         business_name = getattr(business_attributes, "business_name")
         if getattr(case, "status_change_timestamp"):
-            status_change_timestamp = datetime.strftime(
-                datetime.strptime(str(getattr(case, "status_change_timestamp"), "%Y-%m-%d %H:%M:%S.%f %z"),
-                                  "%Y-%m-%d %H:%M:%S"
-                                  ))
+            status_change_timestamp = datetime.strptime(getattr(case, "status_change_timestamp"), "%Y-%m-%d %H:%M:%S.%f %z")
+
+            formatted_status_change_timestamp = datetime.strftime(status_change_timestamp,"%Y-%m-%d %H:%M:%S")
         else:
-            status_change_timestamp = ""
+            formatted_status_change_timestamp = ""
 
         respondents_enrolled_for_business = businesses_enrolled_map.get(str(getattr(case, "party_id")), [])
         print("Datetime: " + str(status_change_timestamp))
@@ -97,7 +96,7 @@ def _add_report_data(ce_id: UUID, survey_id: UUID, document_object, append_funct
                     respondent_telephone,
                     respondent_email,
                     respondent_account_status,
-                    status_change_timestamp,
+                    formatted_status_change_timestamp,
                 ]
                 append_function(document_object, row)
         else:
