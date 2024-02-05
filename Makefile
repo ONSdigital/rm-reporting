@@ -15,7 +15,7 @@ lint-check:
 	pipenv run black --line-length 120 --check .
 	pipenv run flake8
 
-test:
+test: lint-check
 	pipenv run pytest --cov=rm_reporting --cov-report term-missing
 
 start:
