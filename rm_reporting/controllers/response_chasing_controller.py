@@ -1,6 +1,7 @@
 import csv
 import io
 import logging
+from datetime import datetime
 from typing import IO, Callable
 from uuid import UUID
 
@@ -21,7 +22,6 @@ from rm_reporting.controllers.party_controller import (
 
 logger = wrap_logger(logging.getLogger(__name__))
 
-
 COLUMN_TITLES = [
     "Survey Status",
     "Reporting Unit Ref",
@@ -31,6 +31,7 @@ COLUMN_TITLES = [
     "Respondent Telephone",
     "Respondent Email",
     "Respondent Account Status",
+    "Status Change Timestamp",
 ]
 
 
@@ -65,8 +66,13 @@ def _add_report_data(ce_id: UUID, survey_id: UUID, document_object, append_funct
         sample_unit_ref = getattr(case, "sample_unit_ref")
         business_attributes = business_attributes_map[str(getattr(case, "party_id"))]
         business_name = getattr(business_attributes, "business_name")
+        if getattr(case, "status_change_timestamp"):
+            status_change_timestamp = datetime.strftime(getattr(case, "status_change_timestamp"), "%Y-%m-%d %H:%M:%S")
+        else:
+            status_change_timestamp = ""
 
         respondents_enrolled_for_business = businesses_enrolled_map.get(str(getattr(case, "party_id")), [])
+        print("Datetime: " + str(status_change_timestamp))
 
         if respondents_enrolled_for_business:
             for enrolment in respondents_enrolled_for_business:
@@ -88,6 +94,7 @@ def _add_report_data(ce_id: UUID, survey_id: UUID, document_object, append_funct
                     respondent_telephone,
                     respondent_email,
                     respondent_account_status,
+                    status_change_timestamp,
                 ]
                 append_function(document_object, row)
         else:
