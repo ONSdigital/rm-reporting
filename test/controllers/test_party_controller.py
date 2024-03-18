@@ -2,6 +2,8 @@ import uuid
 from test.row_helper import Row
 from unittest import TestCase, mock
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from rm_reporting.controllers import party_controller
 
 SURVEY_ID = "0b1e95dd-c84b-4ce3-a6b1-fe6802e4bda0"
@@ -35,6 +37,12 @@ class TestPartyController(TestCase):
         test_output = party_controller.get_business_attributes(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
 
+    def test_get_business_attributes_failure(self):
+        expected_output = {}
+        test_output = party_controller.get_business_attributes(EXERCISE_ID)
+        self.assertEqual(expected_output, test_output)
+        self.assertRaises(SQLAlchemyError)
+
     @mock.patch("rm_reporting.app.party_db")
     def test_get_enrolment_data(self, mock_engine):
         row_1, row_2, row_3 = self._generate_3_enrolment_data_rows()
@@ -50,6 +58,7 @@ class TestPartyController(TestCase):
         expected_output = []
         test_output = party_controller.get_enrolment_data(SURVEY_ID, test_business_ids)
         self.assertEqual(expected_output, test_output)
+        self.assertRaises(SQLAlchemyError)
 
     def test_get_respondent_ids_from_enrolment_data(self):
         row_1, row_2, row_3 = self._generate_3_enrolment_data_rows()
@@ -64,6 +73,7 @@ class TestPartyController(TestCase):
         expected_output = ""
         test_output = party_controller.get_respondent_ids_from_enrolment_data(test_input)
         self.assertEqual(expected_output, test_output)
+        self.assertRaises(SQLAlchemyError)
 
     @mock.patch("rm_reporting.app.party_db")
     def test_get_respondent_data(self, mock_engine):

@@ -23,6 +23,12 @@ class TestCaseController(TestCase):
         test_output = case_controller.get_all_business_ids_for_collection_exercise(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
 
+    def test_get_all_business_ids_for_collection_exercise_failure(self):
+        expected_output = ""
+        test_output = case_controller.get_all_business_ids_for_collection_exercise(EXERCISE_ID)
+        self.assertEqual(expected_output, test_output)
+        self.assertRaises(SQLAlchemyError)
+
     def test_get_business_ids_from_case_data(self):
         row_1 = Row(party_id=UUID("baefaaef-a2fa-48bc-a2c0-2d58e202253d"))
         row_2 = Row(party_id=UUID("03abc990-4e0f-459e-a3ca-d505fda19299"))
@@ -47,9 +53,8 @@ class TestCaseController(TestCase):
         self.assertEqual(expected_output, test_output)
 
     def test_get_case_data_failure(self):
-        expected_output = None
-        test_output = case_controller.get_case_data("nonexistent_case")
-        print(test_output)
+        expected_output = []
+        test_output = case_controller.get_case_data(EXERCISE_ID)
 
         self.assertEqual(expected_output, test_output)
         self.assertRaises(SQLAlchemyError)
@@ -69,6 +74,12 @@ class TestCaseController(TestCase):
         self.assertEqual(getattr(expected_output[0], "Not Started"), getattr(test_output[0], "Not Started"))
         self.assertEqual(getattr(expected_output[0], "In Progress"), getattr(test_output[0], "In Progress"))
         self.assertEqual(getattr(expected_output[0], "Complete"), getattr(test_output[0], "Complete"))
+
+    def test_get_exercise_completion_stats_failure(self):
+        expected_output = [(0, 0, 0, 0)]
+        test_output = case_controller.get_exercise_completion_stats(EXERCISE_ID)
+        self.assertEqual(expected_output, test_output)
+        self.assertRaises(SQLAlchemyError)
 
     @staticmethod
     def _generate_2_case_data_rows() -> tuple[Row, Row]:
