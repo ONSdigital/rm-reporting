@@ -2,6 +2,8 @@ from test.row_helper import Row
 from unittest import TestCase, mock
 from uuid import UUID
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from rm_reporting.controllers import case_controller
 
 EXERCISE_ID = "b24a9fd7-0b0d-465f-acf6-cfb8c64e8dfd"
@@ -43,6 +45,14 @@ class TestCaseController(TestCase):
         expected_output = [row_1, row_2]
         test_output = case_controller.get_case_data(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
+
+    def test_get_case_data_failure(self):
+        expected_output = None
+        test_output = case_controller.get_case_data("nonexistent_case")
+        print(test_output)
+
+        self.assertEqual(expected_output, test_output)
+        self.assertRaises(SQLAlchemyError)
 
     @mock.patch("rm_reporting.app.case_db")
     def test_get_exercise_completion_stats(self, mock_engine):

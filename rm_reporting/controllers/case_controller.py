@@ -29,10 +29,11 @@ def get_case_data(collection_exercise_id: str) -> list:
 
     try:
         with case_engine.begin() as conn:
-            return conn.execute(case_business_ids_query, {"collection_exercise_id": collection_exercise_id}).all()
+            result = conn.execute(case_business_ids_query, {"collection_exercise_id": collection_exercise_id}).all()
     except SQLAlchemyError:
         logger.error("Failed to get case data", collection_exercise_id=collection_exercise_id)
         abort(404, "Case data not found")
+    return result
 
 
 def get_business_ids_from_case_data(case_result: list) -> str:
