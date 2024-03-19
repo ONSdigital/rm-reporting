@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
-      POSTGRES_DB: partysvc
+      POSTGRES_DB: reporting
     image: postgres:9.6
     ports:
       - "5432:5432"
