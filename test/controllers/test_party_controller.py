@@ -37,7 +37,9 @@ class TestPartyController(TestCase):
         test_output = party_controller.get_business_attributes(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
 
-    def test_get_business_attributes_failure(self):
+    @mock.patch("rm_reporting.app.party_db")
+    def test_get_business_attributes_failure(self, mock_engine):
+        mock_engine.engine.begin().__enter__().execute().all.return_value = []
         expected_output = {}
         test_output = party_controller.get_business_attributes(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
