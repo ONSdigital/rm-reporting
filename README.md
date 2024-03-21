@@ -45,3 +45,5 @@ curl http://localhost:8084/info
 ```bash
 make test
 ```
+
+Force build
