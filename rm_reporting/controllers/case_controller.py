@@ -32,7 +32,7 @@ def get_case_data(collection_exercise_id: str) -> list:
             result = conn.execute(case_business_ids_query, {"collection_exercise_id": collection_exercise_id}).all()
     except SQLAlchemyError:
         logger.error("Failed to get case data", collection_exercise_id=collection_exercise_id)
-        abort(404, "Case data not found")
+        abort(500, "Case data not found")
     return result
 
 
@@ -75,7 +75,7 @@ def get_exercise_completion_stats(collection_exercise_id: str) -> list:
             return conn.execute(case_query, {"collection_exercise_id": collection_exercise_id}).all()
     except SQLAlchemyError:
         logger.error("Failed to get exercise completion stats", collection_exercise_id=collection_exercise_id)
-        abort(404, "Exercise completion stats not found")
+        abort(500, "Exercise completion stats not found")
 
 
 def get_all_business_ids_for_collection_exercise(collection_exercise_id: str) -> str:
@@ -95,7 +95,7 @@ def get_all_business_ids_for_collection_exercise(collection_exercise_id: str) ->
             ).all()
     except SQLAlchemyError:
         logger.error("Failed to get business IDs", collection_exercise_id=collection_exercise_id)
-        abort(404, "Business IDs not found")
+        abort(500, "Business IDs not found")
 
     # Ideally we'd use ','.join(business_id_result) but as it's not free to create a list of the ids, this is the
     # next best thing.

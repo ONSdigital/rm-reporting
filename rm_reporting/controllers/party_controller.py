@@ -37,7 +37,7 @@ def get_business_attributes(collection_exercise_id: str) -> dict[str, list]:
         logger.info("Got party attributes", collection_exercise_id=collection_exercise_id)
     except SQLAlchemyError:
         logger.error("Failed to get party attributes", collection_exercise_id=collection_exercise_id)
-        abort(404, "Party attributes not found")
+        abort(500, "Party attributes not found")
     return result_dict
 
 
@@ -71,7 +71,7 @@ def get_enrolment_data(survey_id: str, business_ids: str) -> list:
         return enrolment_details_result
     except SQLAlchemyError:
         logger.error("Failed to get enrolment details", survey_id=survey_id)
-        abort(404, "Enrolment details not found")
+        abort(500, "Enrolment details not found")
 
 
 def get_respondent_ids_from_enrolment_data(enrolment_details_result: list) -> str:
@@ -123,6 +123,6 @@ def get_respondent_data(respondent_ids_string) -> dict:
         results_dict = {str(getattr(item, "id")): item for item in respondent_details_result}
     except SQLAlchemyError:
         logger.error("Failed to get respondent data")
-        abort(404, "Respondent data not found")
+        abort(500, "Respondent data not found")
     logger.info("Got respondent data")
     return results_dict
