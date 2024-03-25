@@ -1,7 +1,7 @@
 import logging
 
 from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, ProgrammingError
 from structlog import wrap_logger
 
 from rm_reporting import app
@@ -29,7 +29,7 @@ def get_case_data(collection_exercise_id: str) -> list:
     try:
         with case_engine.begin() as conn:
             result = conn.execute(case_business_ids_query, {"collection_exercise_id": collection_exercise_id}).all()
-    except SQLAlchemyError:
+    except SQLAlchemyError or ProgrammingError:
         logger.error("Failed to get case data", collection_exercise_id=collection_exercise_id)
         return
     return result
@@ -72,7 +72,7 @@ def get_exercise_completion_stats(collection_exercise_id: str) -> list:
     try:
         with case_engine.begin() as conn:
             result = conn.execute(case_query, {"collection_exercise_id": collection_exercise_id}).all()
-    except SQLAlchemyError:
+    except SQLAlchemyError or ProgrammingError:
         logger.error("Failed to get exercise completion stats", collection_exercise_id=collection_exercise_id)
         return
     return result
@@ -93,7 +93,7 @@ def get_all_business_ids_for_collection_exercise(collection_exercise_id: str) ->
             business_id_result = conn.execute(
                 case_business_ids_query, {"collection_exercise_id": collection_exercise_id}
             ).all()
-    except SQLAlchemyError:
+    except SQLAlchemyError or ProgrammingError:
         logger.error("Failed to get business IDs", collection_exercise_id=collection_exercise_id)
         return
 
