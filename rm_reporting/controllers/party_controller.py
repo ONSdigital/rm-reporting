@@ -1,6 +1,5 @@
 import logging
 
-from flask_restx import abort
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
@@ -37,7 +36,7 @@ def get_business_attributes(collection_exercise_id: str) -> dict[str, list]:
         logger.info("Got party attributes", collection_exercise_id=collection_exercise_id)
     except SQLAlchemyError:
         logger.error("Failed to get party attributes", collection_exercise_id=collection_exercise_id)
-        abort(500, "Party attributes not found")
+        return
     return result_dict
 
 
@@ -68,10 +67,10 @@ def get_enrolment_data(survey_id: str, business_ids: str) -> list:
     try:
         with party_engine.begin() as conn:
             enrolment_details_result = conn.execute(enrolment_details_query, {"survey_id": survey_id}).all()
-        return enrolment_details_result
     except SQLAlchemyError:
         logger.error("Failed to get enrolment details", survey_id=survey_id)
-        abort(500, "Enrolment details not found")
+        return
+    return enrolment_details_result
 
 
 def get_respondent_ids_from_enrolment_data(enrolment_details_result: list) -> str:
@@ -123,6 +122,6 @@ def get_respondent_data(respondent_ids_string) -> dict:
         results_dict = {str(getattr(item, "id")): item for item in respondent_details_result}
     except SQLAlchemyError:
         logger.error("Failed to get respondent data")
-        abort(500, "Respondent data not found")
+        return
     logger.info("Got respondent data")
     return results_dict
