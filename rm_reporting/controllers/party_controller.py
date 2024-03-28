@@ -29,14 +29,10 @@ def get_business_attributes(collection_exercise_id: str) -> dict[str, list]:
         f"ba.collection_exercise = '{collection_exercise_id}'"
     )
     logger.info("About to get party attributes", collection_exercise_id=collection_exercise_id)
-    try:
-        with party_engine.begin() as conn:
-            attributes_result = conn.execute(text(attributes), {"collection_exercise_id": collection_exercise_id}).all()
-        result_dict = {str(getattr(item, "business_party_uuid")): item for item in attributes_result}
-        logger.info("Got party attributes", collection_exercise_id=collection_exercise_id)
-    except SQLAlchemyError:
-        logger.error("Failed to get party attributes", collection_exercise_id=collection_exercise_id)
-        return
+    with party_engine.begin() as conn:
+        attributes_result = conn.execute(text(attributes), {"collection_exercise_id": collection_exercise_id}).all()
+    result_dict = {str(getattr(item, "business_party_uuid")): item for item in attributes_result}
+    logger.info("Got party attributes", collection_exercise_id=collection_exercise_id)
     return result_dict
 
 
