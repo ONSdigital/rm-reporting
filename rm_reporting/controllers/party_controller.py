@@ -1,6 +1,7 @@
 import logging
 
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
 
 from rm_reporting import app
@@ -59,8 +60,12 @@ def get_enrolment_data(survey_id: str, business_ids: str) -> list:
 
     enrolment_details_query = text(enrolment_details_query_text)
     logger.info("About to get enrolment details", survey_id=survey_id)
-    with party_engine.begin() as conn:
-        enrolment_details_result = conn.execute(enrolment_details_query, {"survey_id": survey_id}).all()
+    try:
+        with party_engine.begin() as conn:
+            enrolment_details_result = conn.execute(enrolment_details_query, {"survey_id": survey_id}).all()
+    except SQLAlchemyError:
+        logger.error("Failed to get enrolment details", survey_id=survey_id)
+        return
     return enrolment_details_result
 
 
@@ -107,8 +112,12 @@ def get_respondent_data(respondent_ids_string) -> dict:
 
     party_engine = app.party_db.engine
     respondent_details_query = text(f"SELECT * FROM partysvc.respondent r WHERE r.id IN ({respondent_ids_string}) ")
-    with party_engine.begin() as conn:
-        respondent_details_result = conn.execute(respondent_details_query).all()
-    results_dict = {str(getattr(item, "id")): item for item in respondent_details_result}
+    try:
+        with party_engine.begin() as conn:
+            respondent_details_result = conn.execute(respondent_details_query).all()
+        results_dict = {str(getattr(item, "id")): item for item in respondent_details_result}
+    except SQLAlchemyError:
+        logger.error("Failed to get respondent data")
+        return
     logger.info("Got respondent data")
     return results_dict

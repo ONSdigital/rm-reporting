@@ -72,7 +72,6 @@ def _add_report_data(ce_id: UUID, survey_id: UUID, document_object, append_funct
             status_change_timestamp = ""
 
         respondents_enrolled_for_business = businesses_enrolled_map.get(str(getattr(case, "party_id")), [])
-        print("Datetime: " + str(status_change_timestamp))
 
         if respondents_enrolled_for_business:
             for enrolment in respondents_enrolled_for_business:
