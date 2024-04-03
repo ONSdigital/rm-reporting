@@ -35,10 +35,6 @@ logger = logging.getLogger(__name__)
 
 initialise_db(app)
 
-from rm_reporting import error_handlers
-app.register_blueprint(error_handlers.blueprint)
-print("YOU REGISTERED THE BLUEPRINT")
-
 CORS(app)
 
 api = Api(title="rm-reporting", default="info", default_label="")
