@@ -23,11 +23,11 @@ class TestCaseController(TestCase):
         test_output = case_controller.get_all_business_ids_for_collection_exercise(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
 
-    def test_get_all_business_ids_for_collection_exercise_failure(self):
-        expected_output = None
-        test_output = case_controller.get_all_business_ids_for_collection_exercise("bad_exercise_id")
-        self.assertEqual(expected_output, test_output)
-        self.assertRaises(SQLAlchemyError)
+    def test_get_all_business_ids_for_collection_exercise_sqlalchemyerror(self):
+        with self.assertRaises(SQLAlchemyError):
+            expected_output = None
+            test_output = case_controller.get_all_business_ids_for_collection_exercise("bad_exercise_id")
+            self.assertEqual(expected_output, test_output)
 
     def test_get_business_ids_from_case_data(self):
         row_1 = Row(party_id=UUID("baefaaef-a2fa-48bc-a2c0-2d58e202253d"))
@@ -52,11 +52,11 @@ class TestCaseController(TestCase):
         test_output = case_controller.get_case_data(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
 
-    def test_get_case_data_failure(self):
-        expected_output = None
-        test_output = case_controller.get_case_data("bad_exercise_id")
-        self.assertEqual(expected_output, test_output)
-        self.assertRaises(SQLAlchemyError)
+    def test_get_case_data_sqlalchemyerror(self):
+        with self.assertRaises(SQLAlchemyError):
+            expected_output = None
+            test_output = case_controller.get_case_data("bad_exercise_id")
+            self.assertEqual(expected_output, test_output)
 
     @mock.patch("rm_reporting.app.case_db")
     def test_get_exercise_completion_stats(self, mock_engine):
@@ -74,11 +74,11 @@ class TestCaseController(TestCase):
         self.assertEqual(getattr(expected_output[0], "In Progress"), getattr(test_output[0], "In Progress"))
         self.assertEqual(getattr(expected_output[0], "Complete"), getattr(test_output[0], "Complete"))
 
-    def test_get_exercise_completion_stats_failure(self):
-        expected_output = None
-        test_output = case_controller.get_exercise_completion_stats("bad_exercise_id")
-        self.assertEqual(expected_output, test_output)
-        self.assertRaises(SQLAlchemyError)
+    def test_get_exercise_completion_stats_sqlalchemyerror(self):
+        with self.assertRaises(SQLAlchemyError):
+            expected_output = None
+            test_output = case_controller.get_exercise_completion_stats("bad_exercise_id")
+            self.assertEqual(expected_output, test_output)
 
     @staticmethod
     def _generate_2_case_data_rows() -> tuple[Row, Row]:

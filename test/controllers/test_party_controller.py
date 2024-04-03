@@ -37,11 +37,11 @@ class TestPartyController(TestCase):
         test_output = party_controller.get_business_attributes(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
 
-    def test_get_business_attributes_failure(self):
-        expected_output = None
-        test_output = party_controller.get_business_attributes("'bad_exercise_id")
-        self.assertEqual(expected_output, test_output)
-        self.assertRaises(SQLAlchemyError)
+    def test_get_business_attributes_sqlalchemyerror(self):
+        with self.assertRaises(SQLAlchemyError):
+            expected_output = None
+            test_output = party_controller.get_business_attributes("'")
+            self.assertEqual(expected_output, test_output)
 
     @mock.patch("rm_reporting.app.party_db")
     def test_get_enrolment_data(self, mock_engine):
@@ -60,11 +60,11 @@ class TestPartyController(TestCase):
         self.assertEqual(expected_output, test_output)
         self.assertRaises(SQLAlchemyError)
 
-    def test_get_enrolment_data_failure(self):
-        expected_output = None
-        test_output = party_controller.get_enrolment_data("bad_survey_id", "bad_business_ids")
-        self.assertEqual(expected_output, test_output)
-        self.assertRaises(SQLAlchemyError)
+    def test_get_enrolment_data_sqlalchemyerror(self):
+        with self.assertRaises(SQLAlchemyError):
+            expected_output = None
+            test_output = party_controller.get_enrolment_data("bad_survey_id", "bad_business_ids")
+            self.assertEqual(expected_output, test_output)
 
     def test_get_respondent_ids_from_enrolment_data(self):
         row_1, row_2, row_3 = self._generate_3_enrolment_data_rows()
@@ -97,11 +97,11 @@ class TestPartyController(TestCase):
         test_output = party_controller.get_respondent_data(test_input)
         self.assertEqual(expected_output, test_output)
 
-    def test_get_respondent_data_failure(self):
-        expected_output = None
-        test_output = party_controller.get_respondent_data("bad_respondent_ids")
-        self.assertEqual(expected_output, test_output)
-        self.assertRaises(SQLAlchemyError)
+    def test_get_respondent_data_sqlalchemyerror(self):
+        with self.assertRaises(SQLAlchemyError):
+            expected_output = None
+            test_output = party_controller.get_respondent_data("bad_respondent_ids")
+            self.assertEqual(expected_output, test_output)
 
     @staticmethod
     def _generate_2_respondent_data_rows() -> tuple[Row, Row]:
