@@ -1,5 +1,6 @@
 import json
 from unittest import TestCase, mock
+
 from sqlalchemy.exc import SQLAlchemyError
 
 from rm_reporting import app

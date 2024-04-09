@@ -2,8 +2,8 @@ import logging
 
 from flask import make_response
 from flask_restx import Resource, abort
-from structlog import wrap_logger
 from sqlalchemy.exc import SQLAlchemyError
+from structlog import wrap_logger
 
 from rm_reporting import response_chasing_api
 from rm_reporting.common.validators import parse_uuid
