@@ -42,6 +42,7 @@ class TestPartyController(TestCase):
         mock_error.side_effect = SQLAlchemyError()
 
         with self.assertRaises(SQLAlchemyError):
+
             expected_output = None
             test_output = party_controller.get_business_attributes(EXERCISE_ID)
             self.assertEqual(expected_output, test_output)
