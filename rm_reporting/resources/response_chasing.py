@@ -51,6 +51,6 @@ class ResponseChasingDownload(Resource):
                 collection_exercise_id=collection_exercise_id,
                 survey_id=survey_id,
             )
-            abort(400, "Database error")
+            abort(500, "Database error")
 
         return response

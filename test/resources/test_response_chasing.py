@@ -69,5 +69,5 @@ class TestResponseChasing(TestCase):
 
         error_response = json.loads(response.data)["message"]
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 500)
         self.assertEqual(error_response, "Database error")
