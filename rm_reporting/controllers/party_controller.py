@@ -36,7 +36,6 @@ def get_business_attributes(collection_exercise_id: str) -> dict[str, list]:
         logger.info("Got party attributes", collection_exercise_id=collection_exercise_id)
     except SQLAlchemyError:
         logger.error("Failed to get party attributes", collection_exercise_id=collection_exercise_id)
-        print("You got here")
         raise
     return result_dict
 

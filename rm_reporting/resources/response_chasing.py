@@ -46,7 +46,9 @@ class ResponseChasingDownload(Resource):
             else:
                 abort(400, "Document type not supported")
         except SQLAlchemyError:
-            logger.error("There is a problem with the database")
+            logger.error("There is a problem with the database",
+                         collection_exercise_id=collection_exercise_id,
+                         survey_id=survey_id)
             abort(400, "Database error")
 
         return response
