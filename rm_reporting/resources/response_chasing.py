@@ -3,6 +3,7 @@ import logging
 from flask import make_response
 from flask_restx import Resource, abort
 from structlog import wrap_logger
+from sqlalchemy.exc import SQLAlchemyError
 
 from rm_reporting import response_chasing_api
 from rm_reporting.common.validators import parse_uuid
@@ -29,19 +30,23 @@ class ResponseChasingDownload(Resource):
             )
             abort(400, "Malformed collection exercise ID")
 
-        if document_type == "xslx":
-            response = make_response(create_xslx_report(collection_exercise_id, survey_id).getvalue(), 200)
-            response.headers["Content-Disposition"] = (
-                f"attachment; filename=response_chasing_{collection_exercise_id}.xlsx"
-            )
-            response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        elif document_type == "csv":
-            response = make_response(create_csv_report(collection_exercise_id, survey_id).getvalue())
-            response.headers["Content-Disposition"] = (
-                f"attachment; filename=response_chasing_{collection_exercise_id}.csv"
-            )
-            response.headers["Content-type"] = "text/csv"
-        else:
-            abort(400, "Document type not supported")
+        try:
+            if document_type == "xslx":
+                response = make_response(create_xslx_report(collection_exercise_id, survey_id).getvalue(), 200)
+                response.headers["Content-Disposition"] = (
+                    f"attachment; filename=response_chasing_{collection_exercise_id}.xlsx"
+                )
+                response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            elif document_type == "csv":
+                response = make_response(create_csv_report(collection_exercise_id, survey_id).getvalue())
+                response.headers["Content-Disposition"] = (
+                    f"attachment; filename=response_chasing_{collection_exercise_id}.csv"
+                )
+                response.headers["Content-type"] = "text/csv"
+            else:
+                abort(400, "Document type not supported")
+        except SQLAlchemyError:
+            logger.error("There is a problem with the database")
+            abort(400, "Database error")
 
         return response

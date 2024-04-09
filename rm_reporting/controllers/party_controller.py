@@ -34,9 +34,9 @@ def get_business_attributes(collection_exercise_id: str) -> dict[str, list]:
             attributes_result = conn.execute(text(attributes), {"collection_exercise_id": collection_exercise_id}).all()
         result_dict = {str(getattr(item, "business_party_uuid")): item for item in attributes_result}
         logger.info("Got party attributes", collection_exercise_id=collection_exercise_id)
-    except SQLAlchemyError as e:
-        e.statement = ""
-        logger.error("Failed to get party attributes", collection_exercise_id=collection_exercise_id, error=e)
+    except SQLAlchemyError:
+        logger.error("Failed to get party attributes", collection_exercise_id=collection_exercise_id)
+        print("You got here")
         raise
     return result_dict
 
@@ -68,8 +68,7 @@ def get_enrolment_data(survey_id: str, business_ids: str) -> list:
     try:
         with party_engine.begin() as conn:
             enrolment_details_result = conn.execute(enrolment_details_query, {"survey_id": survey_id}).all()
-    except SQLAlchemyError as e:
-        e.statement = ""
+    except SQLAlchemyError:
         logger.error("Failed to get enrolment details", survey_id=survey_id)
         raise
     return enrolment_details_result
@@ -122,8 +121,7 @@ def get_respondent_data(respondent_ids_string) -> dict:
         with party_engine.begin() as conn:
             respondent_details_result = conn.execute(respondent_details_query).all()
         results_dict = {str(getattr(item, "id")): item for item in respondent_details_result}
-    except SQLAlchemyError as e:
-        e.statement
+    except SQLAlchemyError:
         logger.error("Failed to get respondent data")
         raise
     logger.info("Got respondent data")
