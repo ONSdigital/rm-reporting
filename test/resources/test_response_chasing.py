@@ -1,6 +1,8 @@
 import json
 from unittest import TestCase, mock
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from rm_reporting import app
 
 COLLECTION_EXERCISE_ID = "33db9feb-bed0-46e8-bcb1-3a0373224cd3"
@@ -55,3 +57,17 @@ class TestResponseChasing(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(error_response, "Document type not supported")
+
+    @mock.patch("rm_reporting.controllers.response_chasing_controller.create_xslx_report")
+    @mock.patch("rm_reporting.resources.response_chasing.create_xslx_report")
+    def test_response_chasing_database_error(self, mock_report_creation_function, create_xslx_report):
+        create_xslx_report.return_value.getvalue.return_value = "xslx report data"
+        mock_report_creation_function.side_effect = SQLAlchemyError()
+        response = self.test_client.get(
+            f"/reporting-api/v1/response-chasing/download-report/xslx/{COLLECTION_EXERCISE_ID}/{SURVEY_ID}"
+        )
+
+        error_response = json.loads(response.data)["message"]
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(error_response, "Database error")

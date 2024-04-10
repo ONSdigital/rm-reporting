@@ -2,6 +2,8 @@ from test.row_helper import Row
 from unittest import TestCase, mock
 from uuid import UUID
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from rm_reporting.controllers import case_controller
 
 EXERCISE_ID = "b24a9fd7-0b0d-465f-acf6-cfb8c64e8dfd"
@@ -20,6 +22,15 @@ class TestCaseController(TestCase):
         expected_output = "'a9f91050-cd3e-4d29-a14d-67995194fc50', '71507170-4090-4f73-bd86-224431e11d3e'"
         test_output = case_controller.get_all_business_ids_for_collection_exercise(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
+
+    @mock.patch("rm_reporting.app.party_db.begin")
+    def test_get_all_business_ids_for_collection_exercise_sqlalchemyerror(self, mock_db):
+        mock_db.side_effect = SQLAlchemyError()
+
+        with self.assertRaises(SQLAlchemyError):
+            expected_output = None
+            test_output = case_controller.get_all_business_ids_for_collection_exercise("bad_exercise_id")
+            self.assertEqual(expected_output, test_output)
 
     def test_get_business_ids_from_case_data(self):
         row_1 = Row(party_id=UUID("baefaaef-a2fa-48bc-a2c0-2d58e202253d"))
@@ -44,6 +55,15 @@ class TestCaseController(TestCase):
         test_output = case_controller.get_case_data(EXERCISE_ID)
         self.assertEqual(expected_output, test_output)
 
+    @mock.patch("rm_reporting.app.party_db.begin")
+    def test_get_case_data_sqlalchemyerror(self, mock_db):
+        mock_db.side_effect = SQLAlchemyError()
+
+        with self.assertRaises(SQLAlchemyError):
+            expected_output = None
+            test_output = case_controller.get_case_data("bad_exercise_id")
+            self.assertEqual(expected_output, test_output)
+
     @mock.patch("rm_reporting.app.case_db")
     def test_get_exercise_completion_stats(self, mock_engine):
         row_1 = Row()
@@ -59,6 +79,15 @@ class TestCaseController(TestCase):
         self.assertEqual(getattr(expected_output[0], "Not Started"), getattr(test_output[0], "Not Started"))
         self.assertEqual(getattr(expected_output[0], "In Progress"), getattr(test_output[0], "In Progress"))
         self.assertEqual(getattr(expected_output[0], "Complete"), getattr(test_output[0], "Complete"))
+
+    @mock.patch("rm_reporting.app.party_db.begin")
+    def test_get_exercise_completion_stats_sqlalchemyerror(self, mock_db):
+        mock_db.side_effect = SQLAlchemyError()
+
+        with self.assertRaises(SQLAlchemyError):
+            expected_output = None
+            test_output = case_controller.get_exercise_completion_stats("bad_exercise_id")
+            self.assertEqual(expected_output, test_output)
 
     @staticmethod
     def _generate_2_case_data_rows() -> tuple[Row, Row]:

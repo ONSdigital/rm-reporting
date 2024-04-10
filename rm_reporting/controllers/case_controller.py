@@ -1,6 +1,7 @@
 import logging
 
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
 
 from rm_reporting import app
@@ -25,8 +26,15 @@ def get_case_data(collection_exercise_id: str) -> list:
         "ORDER BY sample_unit_ref, status"
     )
 
-    with case_engine.begin() as conn:
-        return conn.execute(case_business_ids_query, {"collection_exercise_id": collection_exercise_id}).all()
+    try:
+        with case_engine.begin() as conn:
+            result = conn.execute(case_business_ids_query, {"collection_exercise_id": collection_exercise_id}).all()
+    except SQLAlchemyError as e:
+        logger.error(
+            "Failed to get case data", collection_exercise_id=collection_exercise_id, error=e.__class__.__name__
+        )
+        raise
+    return result
 
 
 def get_business_ids_from_case_data(case_result: list) -> str:
@@ -63,8 +71,17 @@ def get_exercise_completion_stats(collection_exercise_id: str) -> list:
         "AND sample_unit_ref NOT LIKE '1111%'"
     )
 
-    with case_engine.begin() as conn:
-        return conn.execute(case_query, {"collection_exercise_id": collection_exercise_id}).all()
+    try:
+        with case_engine.begin() as conn:
+            result = conn.execute(case_query, {"collection_exercise_id": collection_exercise_id}).all()
+    except SQLAlchemyError as e:
+        logger.error(
+            "Failed to get exercise completion stats",
+            collection_exercise_id=collection_exercise_id,
+            error=e.__class__.__name__,
+        )
+        raise
+    return result
 
 
 def get_all_business_ids_for_collection_exercise(collection_exercise_id: str) -> str:
@@ -77,10 +94,16 @@ def get_all_business_ids_for_collection_exercise(collection_exercise_id: str) ->
         "sample_unit_ref NOT LIKE '1111%'"
     )
 
-    with case_engine.begin() as conn:
-        business_id_result = conn.execute(
-            case_business_ids_query, {"collection_exercise_id": collection_exercise_id}
-        ).all()
+    try:
+        with case_engine.begin() as conn:
+            business_id_result = conn.execute(
+                case_business_ids_query, {"collection_exercise_id": collection_exercise_id}
+            ).all()
+    except SQLAlchemyError as e:
+        logger.error(
+            "Failed to get business IDs", collection_exercise_id=collection_exercise_id, error=e.__class__.__name__
+        )
+        raise
 
     # Ideally we'd use ','.join(business_id_result) but as it's not free to create a list of the ids, this is the
     # next best thing.

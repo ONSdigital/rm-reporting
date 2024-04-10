@@ -1,7 +1,8 @@
 import logging
 
-from flask import make_response
+from flask import jsonify, make_response
 from flask_restx import Resource, abort
+from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
 
 from rm_reporting import response_chasing_api
@@ -29,19 +30,27 @@ class ResponseChasingDownload(Resource):
             )
             abort(400, "Malformed collection exercise ID")
 
-        if document_type == "xslx":
-            response = make_response(create_xslx_report(collection_exercise_id, survey_id).getvalue(), 200)
-            response.headers["Content-Disposition"] = (
-                f"attachment; filename=response_chasing_{collection_exercise_id}.xlsx"
+        try:
+            if document_type == "xslx":
+                response = make_response(create_xslx_report(collection_exercise_id, survey_id).getvalue(), 200)
+                response.headers["Content-Disposition"] = (
+                    f"attachment; filename=response_chasing_{collection_exercise_id}.xlsx"
+                )
+                response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            elif document_type == "csv":
+                response = make_response(create_csv_report(collection_exercise_id, survey_id).getvalue())
+                response.headers["Content-Disposition"] = (
+                    f"attachment; filename=response_chasing_{collection_exercise_id}.csv"
+                )
+                response.headers["Content-type"] = "text/csv"
+            else:
+                abort(400, "Document type not supported")
+        except SQLAlchemyError:
+            logger.error(
+                "There is a problem with the database",
+                collection_exercise_id=collection_exercise_id,
+                survey_id=survey_id,
             )
-            response.headers["Content-type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        elif document_type == "csv":
-            response = make_response(create_csv_report(collection_exercise_id, survey_id).getvalue())
-            response.headers["Content-Disposition"] = (
-                f"attachment; filename=response_chasing_{collection_exercise_id}.csv"
-            )
-            response.headers["Content-type"] = "text/csv"
-        else:
-            abort(400, "Document type not supported")
+            return make_response(jsonify({"message": "Database error"}), 500)
 
         return response
