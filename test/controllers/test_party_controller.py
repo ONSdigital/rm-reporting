@@ -38,8 +38,8 @@ class TestPartyController(TestCase):
         self.assertEqual(expected_output, test_output)
 
     @mock.patch("rm_reporting.app.party_db.begin")
-    def test_get_business_attributes_sqlalchemyerror(self, mock_error):
-        mock_error.side_effect = SQLAlchemyError()
+    def test_get_business_attributes_sqlalchemyerror(self, mock_db):
+        mock_db.side_effect = SQLAlchemyError()
 
         with self.assertRaises(SQLAlchemyError):
             expected_output = None
@@ -64,8 +64,8 @@ class TestPartyController(TestCase):
         self.assertRaises(SQLAlchemyError)
 
     @mock.patch("rm_reporting.app.party_db.begin")
-    def test_get_enrolment_data_sqlalchemyerror(self, mock_error):
-        mock_error.side_effect = SQLAlchemyError()
+    def test_get_enrolment_data_sqlalchemyerror(self, mock_db):
+        mock_db.side_effect = SQLAlchemyError()
 
         with self.assertRaises(SQLAlchemyError):
             expected_output = None
@@ -104,8 +104,8 @@ class TestPartyController(TestCase):
         self.assertEqual(expected_output, test_output)
 
     @mock.patch("rm_reporting.app.party_db.begin")
-    def test_get_respondent_data_sqlalchemyerror(self, mock_error):
-        mock_error.side_effect = SQLAlchemyError()
+    def test_get_respondent_data_sqlalchemyerror(self, mock_db):
+        mock_db.side_effect = SQLAlchemyError()
 
         with self.assertRaises(SQLAlchemyError):
             expected_output = None

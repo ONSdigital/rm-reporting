@@ -24,8 +24,8 @@ class TestCaseController(TestCase):
         self.assertEqual(expected_output, test_output)
 
     @mock.patch("rm_reporting.app.party_db.begin")
-    def test_get_all_business_ids_for_collection_exercise_sqlalchemyerror(self, mock_error):
-        mock_error.side_effect = SQLAlchemyError()
+    def test_get_all_business_ids_for_collection_exercise_sqlalchemyerror(self, mock_db):
+        mock_db.side_effect = SQLAlchemyError()
 
         with self.assertRaises(SQLAlchemyError):
             expected_output = None
@@ -56,8 +56,8 @@ class TestCaseController(TestCase):
         self.assertEqual(expected_output, test_output)
 
     @mock.patch("rm_reporting.app.party_db.begin")
-    def test_get_case_data_sqlalchemyerror(self, mock_error):
-        mock_error.side_effect = SQLAlchemyError()
+    def test_get_case_data_sqlalchemyerror(self, mock_db):
+        mock_db.side_effect = SQLAlchemyError()
 
         with self.assertRaises(SQLAlchemyError):
             expected_output = None
@@ -81,8 +81,8 @@ class TestCaseController(TestCase):
         self.assertEqual(getattr(expected_output[0], "Complete"), getattr(test_output[0], "Complete"))
 
     @mock.patch("rm_reporting.app.party_db.begin")
-    def test_get_exercise_completion_stats_sqlalchemyerror(self, mock_error):
-        mock_error.side_effect = SQLAlchemyError()
+    def test_get_exercise_completion_stats_sqlalchemyerror(self, mock_db):
+        mock_db.side_effect = SQLAlchemyError()
 
         with self.assertRaises(SQLAlchemyError):
             expected_output = None
