@@ -1,6 +1,6 @@
 import logging
 
-from flask import make_response
+from flask import jsonify, make_response
 from flask_restx import Resource, abort
 from sqlalchemy.exc import SQLAlchemyError
 from structlog import wrap_logger
@@ -51,6 +51,6 @@ class ResponseChasingDownload(Resource):
                 collection_exercise_id=collection_exercise_id,
                 survey_id=survey_id,
             )
-            abort(500, "Database error")
+            return make_response(jsonify({"message": "Database error"}), 500)
 
         return response
