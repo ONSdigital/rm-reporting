@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import IO, Callable
 from uuid import UUID
 
+from dateutil.tz import tz
 from openpyxl import Workbook
 from structlog import wrap_logger
 
@@ -67,7 +68,12 @@ def _add_report_data(ce_id: UUID, survey_id: UUID, document_object, append_funct
         business_attributes = business_attributes_map[str(getattr(case, "party_id"))]
         business_name = getattr(business_attributes, "business_name")
         if getattr(case, "status_change_timestamp"):
-            status_change_timestamp = datetime.strftime(getattr(case, "status_change_timestamp"), "%Y-%m-%d %H:%M:%S")
+            status_change_timestamp = datetime.strftime(
+                getattr(case, "status_change_timestamp")
+                .replace(tzinfo=tz.gettz("UTC"))
+                .astimezone(tz.gettz("Europe/London")),
+                "%Y-%m-%d %H:%M:%S",
+            )
         else:
             status_change_timestamp = ""
 
