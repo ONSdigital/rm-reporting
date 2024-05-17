@@ -33,7 +33,7 @@ def cases():
             "11110000003",
             "NOTSTARTED",
             datetime.strptime("2024-04-01 12:00:00.00 +0000", "%Y-%m-%d %H:%M:%S.%f %z").astimezone(timezone.utc),
-            # date/time during BST, astimezone(timezone.utc) will make this 2024-04-01 11:00:00
+            # date/time during BST
         ),
         CASE(
             "723fdb36-1210-47a4-be06-dbc3e7026523",
