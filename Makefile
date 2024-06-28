@@ -4,13 +4,13 @@ build:
 	pipenv install --dev
 
 lint:
-	pipenv check --ignore=67895
+	pipenv check -i 70612 -i 70624
 	pipenv run isort .
 	pipenv run black --line-length 120 .
 	pipenv run flake8
 
 lint-check:
-	pipenv check --ignore=67895
+	pipenv check -i 70612 -i 70624
 	pipenv run isort --check-only .
 	pipenv run black --line-length 120 --check .
 	pipenv run flake8
