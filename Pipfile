@@ -13,7 +13,7 @@ structlog = "*"
 openpyxl = "*"
 sqlalchemy = "*"
 psycopg2-binary = "*"
-werkzeug = "==2.3.8"
+werkzeug = "*"
 google-cloud-storage = "*"
 boto3 = "*"
 
