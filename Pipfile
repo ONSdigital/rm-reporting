@@ -8,12 +8,11 @@ flask = "*"
 flask-cors = "*"
 flask-restx = "*"
 gunicorn = "*"
-gevent = {version = "*", platform_python_implementation="=='CPython'"}
+gevent = "*"
 structlog = "*"
 openpyxl = "*"
 sqlalchemy = "*"
 psycopg2-binary = "*"
-werkzeug = "*"
 google-cloud-storage = "*"
 boto3 = "*"
 
