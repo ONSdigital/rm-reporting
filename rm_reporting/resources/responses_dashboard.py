@@ -19,16 +19,12 @@ def get_report_figures(survey_id, collection_exercise_id):
 
     # Get all cases for a collection exercise
     logger.info(
-        "Getting cases for collection exercise",
-        survey_id=survey_id,
-        collection_exercise_id=collection_exercise_id
+        "Getting cases for collection exercise", survey_id=survey_id, collection_exercise_id=collection_exercise_id
     )
     case_result = case_controller.get_exercise_completion_stats(collection_exercise_id)
     if getattr(case_result[0], "Sample Size") == 0:
         logger.error(
-            "No cases found for collection exercise",
-            survey_id=survey_id,
-            collection_exercise_id=collection_exercise_id
+            "No cases found for collection exercise", survey_id=survey_id, collection_exercise_id=collection_exercise_id
         )
         raise NoDataException
     result_dict["sampleSize"] = getattr(case_result[0], "Sample Size")
@@ -40,15 +36,13 @@ def get_report_figures(survey_id, collection_exercise_id):
     logger.info(
         "Getting business IDs for collection exercise",
         survey_id=survey_id,
-        collection_exercise_id=collection_exercise_id
+        collection_exercise_id=collection_exercise_id,
     )
     business_ids = case_controller.get_all_business_ids_for_collection_exercise(collection_exercise_id)
 
     # Get all the enrolments for the survey the exercise is for but only for the businesses
     logger.info(
-        "Getting enrolments for collection exercise",
-        survey_id=survey_id,
-        collection_exercise_id=collection_exercise_id
+        "Getting enrolments for collection exercise", survey_id=survey_id, collection_exercise_id=collection_exercise_id
     )
     enrolment_details_result = party_controller.get_enrolment_data(survey_id, business_ids)
 
