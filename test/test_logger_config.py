@@ -8,7 +8,7 @@ from testfixtures import log_capture
 
 from rm_reporting.logger_config import logger_initial_config
 
-# Supresses the warnings that won't be fixed by the project maintainer until Python 2 is deprecated.
+# Suppresses the warnings that won't be fixed by the project maintainer until Python 2 is deprecated.
 # More information about this can be found https://github.com/Simplistix/testfixtures/pull/54
 # Remove this and the filterwarnings if this problem ever gets fixed.
 testfixtures_warning = "inspect.getargspec()"
